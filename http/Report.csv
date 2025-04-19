@@ -1,0 +1,5 @@
+ReportTimestamp,ParameterName,ParameterValue,ParameterType
+1364529149,Device.MoCA.Interface.1.Stats.BroadPktSent,25248,unsignedLong
+1364529149,Device.MoCA.Interface.1.Stats.BytesReceived,200543250,unsignedLong
+1364529149,Device.MoCA.Interface.1.Stats.BytesSent,7682161,unsignedLong
+1364529149,Device.MoCA.Interface.1.Stats.MultiPktReceived,890682272,unsignedLong

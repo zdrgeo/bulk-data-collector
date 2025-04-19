@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otelcol-contrib
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otelcol-contrib
+  template:
+    metadata:
+      labels:
+        app: otelcol-contrib
+    spec:
+      containers:
+      - name: otelcol-contrib
+        image: otel/opentelemetry-collector-contrib
+        args:
+        - "--config=/etc/otelcol-contrib/config.yaml"
+        volumeMounts:
+        - name: otelcol-contrib-config
+          mountPath: /etc/otelcol-contrib
+          readOnly: true
+      volumes:
+      - name: otelcol-contrib-config
+        configMap:
+          name: otelcol-contrib-config

@@ -1,0 +1,90 @@
+# Examples based on TR-069 specification
+
+@Device_OUI = 766768
+@Device_ProductClass = ONU
+@Device_SerialNumber = 400102030405
+@Collector_HostAddress = http://localhost:8088
+
+###
+
+POST {{Collector_HostAddress}}/collector?oui={{Device_OUI}}&pc={{Device_ProductClass}}&sn={{Device_SerialNumber}}
+Content-Type: text/csv; charset=UTF-8; header=present
+BBF-Report-Format: ParameterPerRow
+
+ReportTimestamp,ParameterName,ParameterValue,ParameterType
+1364529149,Device.MoCA.Interface.1.Stats.BroadPktSent,25248,unsignedLong
+1364529149,Device.MoCA.Interface.1.Stats.BytesReceived,200543250,unsignedLong
+1364529149,Device.MoCA.Interface.1.Stats.BytesSent,7682161,unsignedLong
+1364529149,Device.MoCA.Interface.1.Stats.MultiPktReceived,890682272,unsignedLong
+
+###
+
+POST {{Collector_HostAddress}}/collector?oui={{Device_OUI}}&pc={{Device_ProductClass}}&sn={{Device_SerialNumber}}
+Content-Type: text/csv; charset=UTF-8; header=present
+BBF-Report-Format: ParameterPerColumn
+
+ReportTimestamp,BroadPktSent,BytesReceived,BytesSent,MultiPktReceived
+1364529149,25248,200543250,7682161,890682272
+1464639150,25249,200553250,7683161,900683272
+1564749151,25255,200559350,7684133,910682272
+1664859152,25252,200653267,7685167,9705982277
+
+###
+
+POST {{Collector_HostAddress}}/collector?oui={{Device_OUI}}&pc={{Device_ProductClass}}&sn={{Device_SerialNumber}}
+Content-Type: application/json; charset=UTF-8
+BBF-Report-Format: NameValuePair
+
+{
+    "Report": [
+        {
+            "CollectionTime": 1364529149,
+            "Device.MoCA.Interface.1.Stats.BroadPktSent": 25248,
+            "Device.MoCA.Interface.1.Stats.BytesReceived": 200543250,
+            "Device.MoCA.Interface.1.Stats.BytesSent": 25248,
+            "Device.MoCA.Interface.1.Stats.MultiPktReceived": 200543250,
+            "Device.MoCA.Interface.2.Stats.BroadPktSent": 93247,
+            "Device.MoCA.Interface.2.Stats.BytesReceived": 900543250,
+            "Device.MoCA.Interface.2.Stats.BytesSent": 93247,
+            "Device.MoCA.Interface.2.Stats.MultiPktReceived": 900543250
+        }
+    ]
+}
+
+###
+
+POST {{Collector_HostAddress}}/collector?oui={{Device_OUI}}&pc={{Device_ProductClass}}&sn={{Device_SerialNumber}}
+Content-Type: application/json; charset=UTF-8
+BBF-Report-Format: ObjectHierarchy
+
+{
+    "Report": [
+        {
+            "CollectionTime": 1364529149,
+            "Device": {
+                "MoCA": {
+                    "Interface": {
+                        "1": {
+                            "Stats": {
+                                "BroadPktSent": 25248,
+                                "BytesReceived": 200543250,
+                                "BytesSent": 25248,
+                                "MultiPktReceived": 200543250
+                            }
+                        },
+                        "2": {
+                            "Stats": {
+                                "BroadPktSent": 93247,
+                                "BytesReceived": 900543250,
+                                "BytesSent": 93247,
+                                "MultiPktReceived": 900543250
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
+
+###
