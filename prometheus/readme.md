@@ -1,6 +1,6 @@
 Docker Compose
 ```
-docker compose up -d
+docker compose --profile grafana up -d
 docker compose down
 ```
 
@@ -20,4 +20,9 @@ sum (partition_queue_counter)
 sum (partition_batch_counter_total)
 
 sum (partition_event_counter_total)
+```
+
+```
+Device_MoCA_Interface_1_Stats_BytesSent_total{SerialNumber=~".*"}
+Device_MoCA_Interface_1_Stats_BytesReceived_total{SerialNumber=~".*"}
 ```
