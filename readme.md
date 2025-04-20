@@ -109,7 +109,7 @@ This variant of the collector sends the collected data to any [Open Telemetry](h
 .alter table OTELMetrics policy streamingingestion enable
 .alter table OTELTraces policy streamingingestion enable
 
-.add database oteldb ingestors ('aadapp=325195ae-1ad3-4170-879a-0e33f0aeb00f') 'Azure Data Explorer App Registration'
+.add database oteldb ingestors ('aadapp=<Add Microsoft Entra ID app ID here>') 'Azure Data Explorer App Registration'
 ```
 
 2. Add `config.yaml` to `otelcol-contrib`
