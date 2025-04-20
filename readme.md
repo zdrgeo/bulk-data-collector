@@ -12,18 +12,16 @@ In telecom industry, CWMP (or TR-069) is a widely adopted protocol - one of the 
 > [!NOTE]
 > There is a newer, more capable and efficient gRPC based protocol - USP (or TR-369) that aims to replace CWMP but it is not yet widely adopted. USP uses the same mechanism for bulk data collection as CWMP, so the bulk data collector can also be used with USP.
 
-## Concepts
+## Context
 
 ```mermaid
 graph LR
-    subgraph ACSandCPEs[ACS and CPEs]
-        ACS[ACS]
-        ACS <--> CPE1
-        ACS <--> CPEn
-        CPE1[CPE 1] --> BDC
-        CPEn[CPE N] --> BDC
-        BDC[Bulk Data Collector]
-    end
+    ACS[ACS]
+    ACS <-.-> CPE1
+    ACS <-.-> CPEn
+    CPE1[CPE 1] --> BDC
+    CPEn[CPE N] --> BDC
+    BDC((Bulk Data Collector))
 ```
 
 Work in progress...
@@ -38,11 +36,11 @@ graph LR
     subgraph BDC[Bulk Data Collector]
         C[Controller]
         C --> P1Q[Partition 1 Queue]
-        P1Q --> P1P1[Partition 1 Producer 1]
-        P1Q --> P1Pz[Partition 1 Producer Z]
+        P1Q --> P1P1((Partition 1<br/>Producer 1))
+        P1Q --> P1Pz((Partition 1<br/>Producer Z))
         C --> PyQ[Partition Y Queue]
-        PyQ --> PyP1[Partition Y Producer 1]
-        PyQ --> PyPz[Partition Y Producer Z]
+        PyQ --> PyP1((Partition Y<br/>Producer 1))
+        PyQ --> PyPz((Partition Y<br/>Producer Z))
     end
     subgraph CPEs[CPEs]
         CPE1[CPE 1] --> C
@@ -65,6 +63,8 @@ graph LR
 
 AZURE_EVENTHUBS_CONNECTION_STRING=<Add the Event Hubs connection string here>
 AZURE_EVENTHUBS_EVENTHUB=<Add the Event Hub name here>
+PARTITION_QUEUE_LIMIT=100
+PARTITION_PRODUCERS_COUNT=1
 ```
 
 2. Run Prometheus
