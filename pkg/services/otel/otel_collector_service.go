@@ -10,18 +10,13 @@ import (
 	"github.com/zdrgeo/bulk-data-collector/pkg/services"
 )
 
-type OTelLoggerOptions struct {
-	Name string
-}
-
 type OTelMeterOptions struct {
 	Name        string
 	Instruments []*OTelInstrumentOptions
 }
 
 type OTelCollectorServiceOptions struct {
-	Logger *OTelLoggerOptions
-	Meter  *OTelMeterOptions
+	Meter *OTelMeterOptions
 }
 
 type OTelCollectorService struct {

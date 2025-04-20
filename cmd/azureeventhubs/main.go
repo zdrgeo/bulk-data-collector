@@ -147,8 +147,8 @@ func mainAzureEventHubs() {
 	defer producerClient.Close(ctx)
 
 	collectorServiceOptions := &azureeventhubsservices.AzureEventHubsCollectorServiceOptions{
-		PartitionQueueLimit:     100,
-		PartitionProducersCount: 1, // 20 - Standard, 32 partitioins, 40 TU
+		PartitionQueueLimit:     viper.GetInt("PARTITION_QUEUE_LIMIT"),
+		PartitionProducersCount: viper.GetInt("PARTITION_PRODUCERS_COUNT"),
 	}
 
 	collectorService, err := azureeventhubsservices.NewAzureEventHubsCollectorService(producerClient, collectorServiceOptions)
