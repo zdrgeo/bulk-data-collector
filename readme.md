@@ -2,7 +2,13 @@
 
 ## Overview
 
-In telecom industry, CWMP (or TR-069) is a widely adopted protocol - one of the best options for the ISPs to manage sometimes millions of devices remotely. There are two main players in this protocol - the CPE (Customer Premises Equipment) devices and the ACS (Auto-Configuration Server) server that controls them. Being SOAP-based the protocol does a very good job at controlling the devices remotely, but presents challenges when it comes to collecting large amounts of telemetry data from the devices. To address this, an extension to the protocol exists that allows you to use a separate endpoint where the devices periodically submit bulk data reports containing the values of the device parameters in CSV or JSON format. In addition to the more efficient format, this completely decouples the telemetry data plane from the data plane used by the ACS to control the CPEs. **This means you have more options where to send the telemetry.** Instead of sending it to the ACS (or to a built-in component of the ACS solution resposible for this) you can choose to send it to a dedicated analytics or telemetry platform. These platforms are often more scalable and have more advanced capabilities than the ACS solution can offer. This repo explores a few such options.
+In the telecom industry, CWMP (also known as TR-069) is a widely adopted protocol — one of the best options for ISPs to remotely manage millions of devices. The protocol defines two main roles: the CPE (Customer Premises Equipment) devices and the ACS (Auto-Configuration Server), which controls them.
+
+Being SOAP-based, CWMP is well-suited for remote device management, but presents challenges when collecting large volumes of telemetry data from the devices. To address this, an extension to the protocol allows devices to periodically submit bulk data reports in CSV or JSON format to a separate endpoint.
+
+This option not only provides a more efficient data format, but also decouples the telemetry data plane from the control plane used by the ACS. In other words, you are not limited to sending telemetry to the ACS itself (or to the component of the ACS solution resposible for this). Instead, you can send telemetry data to a dedicated analytics or telemetry platform — solutions that are often more scalable and capable than those provided by traditional ACS solutions.
+
+This repository explores several practical options for implementing this approach.
 
 - [Azure Event Hubs](#azure-event-hubs)
 - [Open Telemetry](#open-telemetry)
@@ -10,7 +16,7 @@ In telecom industry, CWMP (or TR-069) is a widely adopted protocol - one of the 
 - [Dapr](#dapr)
 
 > [!NOTE]
-> There is a newer, more capable and efficient gRPC based protocol - USP (or TR-369) that aims to replace CWMP but it is not yet widely adopted. USP uses the same mechanism for bulk data collection as CWMP, so the bulk data collector can also be used with USP.
+> A newer protocol — USP (also known as TR-369) - aims to replace CWMP. It offers better performance, modern communication patterns, and enhanced capabilities, but it is not yet widely adopted. USP uses the same mechanism for telemetry data collection as CWMP, so the same approach can also be used with USP.
 
 ## Context
 
@@ -30,7 +36,7 @@ Work in progress...
 
 This variant of the collector sends the collected data to [Azure Events Hubs](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about) - the main Azure real-time data ingestion service. Once the data is ingested into Event Hubs, there is a large number of real-time stream processing, data analytics and data storage services that you can use to extract insights from it.
 
-The Azure Event Hubs collector variant is relatively more complex than the others. It is worth taking a look at its internal components so you can configure it to work effectively.
+The Azure Event Hubs collector variant is relatively more complex than the others. It is worth taking a look at its internal components so you can configure it to work efficiently.
 ```mermaid
 graph LR
     subgraph BDC[Bulk Data Collector]
@@ -54,7 +60,28 @@ graph LR
     end
 ```
 
-### Testing
+When the collector starts, it queries the Event Hub management API to retrieve the number of partitions and their IDs. For each partition, the collector creates a dedicated in-memory queue and launches a configurable number of consumers. These consumers — referred to as "partition producers" — concurrently pull events from their queue, aggregate the events into batches, and send those batches to the assigned Event Hub partition.
+
+### Available configuration options
+
+| Name | Default | Optional | Description |
+|--|--|--|--|
+| AZURE_EVENTHUBS_CONNECTION_STRING | | | Azure Event Hubs connection string. |
+| AZURE_EVENTHUBS_EVENTHUB | | | Azure Event Hub name. |
+| PARTITION_QUEUE_LIMIT | 1000 | Yes | Capacity of each partition queue. |
+| PARTITION_PRODUCERS_COUNT | 1 | Yes | Number of partition producers per partition queue. |
+
+> [!IMPORTANT]
+> You should run a series of experiments to determine the optimal values for the PARTITION_QUEUE_LIMIT and PARTITION_PRODUCERS_COUNT parameters based on your specific scenario. These values will largely depend on your Event Hubs configuration — such as the pricing tier, the number of provisioned Throughput/Processing/Capacity Units, and the number of partitions — as well as your target event ingestion rate.
+> 
+> To assist with this task, the collector exports the following OTel metrics:
+> - partition_queue_counter – The number of events currently in each partition queue.
+> - partition_batch_counter – The number of batches sent to each Event Hub partition.
+> - partition_event_counter – The number of events sent to each Event Hub partition.
+> 
+> When used alongside the Event Hubs telemetry available in the Azure portal, these metrics provide good visibility to the pipeline performance.
+
+### Example
 
 1. Add `config.env` to `cmd/azureeventhubs`
 
@@ -94,7 +121,7 @@ Work in progress...
 
 This variant of the collector sends the collected data to any [Open Telemetry](https://opentelemetry.io/docs/what-is-opentelemetry/) compatible collector. I will use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) exporter.
 
-### Testing
+### Example
 
 1. Create the necessary tables in Azure Data Explorer
 
@@ -236,7 +263,7 @@ Work in progress...
 
 This variant of the collector sends the collected data to any MQTT v5 compatible broker. I will use [Azure Event Grid](https://learn.microsoft.com/en-us/azure/event-grid/) with MQTT feature enabled.
 
-### Testing
+### Example
 
 1. Add the cert and key files to `cmd/mqtt`
 
@@ -267,5 +294,9 @@ k6 run collector.js
 Work in progress...
 
 ## Dapr
+
+Work in progress...
+
+### Example
 
 Work in progress...
