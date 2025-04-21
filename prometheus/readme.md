@@ -1,10 +1,14 @@
-Docker Compose
+Run Prometheus and Grafana
+
+Open [Prometheus dashboard](http://localhost:9090) or [Grafana dashboard](http://localhost:3000).
+
 ```
 docker compose --profile grafana up -d
 docker compose down
 ```
 
-To compare partition metrics on one graph
+Create a graph with the following metrics to monitor the number of events processed per partition
+
 ```promql
 partition_queue_counter{partition=~".*"}
 
@@ -13,7 +17,8 @@ partition_batch_counter_total{partition=~".*"}
 partition_event_counter_total{partition=~".*"}
 ```
 
-To aggregate metric totals by partition:
+or alternatively, use the following aggregate metrics to monitor the total event volume flowing through the entire pipeline
+
 ```promql
 sum (partition_queue_counter)
 

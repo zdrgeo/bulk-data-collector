@@ -4,14 +4,14 @@
 
 In the telecom industry, CWMP (also known as TR-069) is a widely adopted protocol — one of the best options for ISPs to remotely manage millions of devices. The protocol defines two main roles: the CPE (Customer Premises Equipment) devices and the ACS (Auto-Configuration Server), which controls them.
 
-Being SOAP-based, CWMP is well-suited for remote device management, but presents challenges when collecting large volumes of telemetry data from the devices. To address this, an extension to the protocol allows devices to periodically submit bulk data reports in CSV or JSON format to a separate endpoint.
+Being SOAP-based, CWMP is well-suited for remote device management, but presents challenges when collecting large volumes of telemetry data from the devices. To address this, an extension to the protocol allows devices to periodically submit bulk data reports in CSV or JSON format to a separate endpoint known as bulk data collector.
 
-This option not only provides a more efficient data format, but also decouples the telemetry data plane from the control plane used by the ACS. In other words, you are not limited to sending telemetry to the ACS itself (or to the component of the ACS solution resposible for this). Instead, you can send telemetry data to a dedicated analytics or telemetry platform — solutions that are often more scalable and capable than those provided by traditional ACS solutions.
+This option not only provides a more efficient data format, but also decouples the telemetry data plane from the control plane used by the ACS. In other words, you are not limited to sending telemetry to the ACS itself (or to the component of the ACS solution responsible for this). Instead, you can send telemetry data to a dedicated analytics or telemetry platform — solutions that are often more scalable and capable than those provided by traditional ACS systems.
 
 This repository explores several practical options for implementing this approach.
 
 - [Azure Event Hubs](#azure-event-hubs)
-- [Open Telemetry](#open-telemetry)
+- [OpenTelemetry (OTel)](#opentelemetry-otel)
 - [MQTT](#mqtt)
 - [Dapr](#dapr)
 
@@ -60,7 +60,9 @@ graph LR
     end
 ```
 
-When the collector starts, it queries the Event Hub management API to retrieve the number of partitions and their IDs. For each partition, the collector creates a dedicated in-memory queue and launches a configurable number of consumers. These consumers — referred to as "partition producers" — concurrently pull events from their queue, aggregate the events into batches, and send those batches to the assigned Event Hub partition.
+When the collector starts, it queries the Event Hub management API to retrieve the number of partitions and their IDs. For each partition, the collector creates a dedicated in-memory queue and launches a configurable number of consumers. These consumers — referred to as "partition producers" — concurrently dequeue events from their queue, aggregate the events into batches, and send those batches to the assigned Event Hub partition.
+
+**When receiving reports from devices, the collector aims to distribute events evenly across all partition queues, while ensuring that all events from the same device are routed to the same partition queue.** This behavior is often preferred or even required by the downstream processing engines to efficiently support some advanced stream processing patterns.
 
 ### Available configuration options
 
@@ -94,14 +96,36 @@ PARTITION_QUEUE_LIMIT=100
 PARTITION_PRODUCERS_COUNT=1
 ```
 
-2. Run Prometheus
+2. Run Prometheus and Grafana
 
 ```shell
 cd prometheus
-docker compose  up -d
+docker compose --profile grafana up -d
 ```
 
-3. Run the collector
+Open [Prometheus dashboard](http://localhost:9090) or [Grafana dashboard](http://localhost:3000).
+
+Create a graph with the following metrics to monitor the number of events processed per partition
+
+```promql
+partition_queue_counter{partition=~".*"}
+
+partition_batch_counter_total{partition=~".*"}
+
+partition_event_counter_total{partition=~".*"}
+```
+
+or alternatively, use the following aggregate metrics to monitor the total event volume flowing through the entire pipeline
+
+```promql
+sum (partition_queue_counter)
+
+sum (partition_batch_counter_total)
+
+sum (partition_event_counter_total)
+```
+
+3. Run the bulk data collector
 
 ```shell
 cd cmd/azureeventhubs
@@ -117,11 +141,13 @@ k6 run collector.js
 
 Work in progress...
 
-## Open Telemetry
+## OpenTelemetry (OTel)
 
-This variant of the collector sends the collected data to any [Open Telemetry](https://opentelemetry.io/docs/what-is-opentelemetry/) compatible collector. I will use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) exporter.
+This variant of the collector works very differently — it uses a configurable mapping to extract selected properties from device reports and convert them into OTel metrics. These metrics are then periodically exported via the OTLP protocol to any [OpenTelemetry (OTel)](https://opentelemetry.io/docs/what-is-opentelemetry/) compatible collector. This enables direct integration of selected device metrics with a wide range of observability platforms.
 
 ### Example
+
+I will use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) and [Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/) exporters.
 
 1. Create the necessary tables in Azure Data Explorer
 
@@ -236,14 +262,14 @@ otel:
         unit: "byte"
 ```
 
-5. Run the OTel collector
+5. Run the OTel Contrib collector
 
 ```shell
 cd otelcol-contrib
 docker compose up -d
 ```
 
-6. Run the collector
+6. Run the bulk data collector
 
 ```shell
 cd cmd/otel
@@ -261,9 +287,11 @@ Work in progress...
 
 ## MQTT
 
-This variant of the collector sends the collected data to any MQTT v5 compatible broker. I will use [Azure Event Grid](https://learn.microsoft.com/en-us/azure/event-grid/) with MQTT feature enabled.
+This variant of the collector sends the collected data to any MQTT v5 compatible broker.
 
 ### Example
+
+I will use [Azure Event Grid](https://learn.microsoft.com/en-us/azure/event-grid/) with MQTT feature enabled.
 
 1. Add the cert and key files to `cmd/mqtt`
 
@@ -277,7 +305,7 @@ MQTT_CERT_FILE=<Add the cert file here>
 MQTT_KEY_FILE=<Add the key file here>
 ```
 
-3. Run the collector
+3. Run the bulk data collector
 
 ```shell
 cd cmd/mqtt
