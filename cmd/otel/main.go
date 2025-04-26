@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
@@ -76,7 +77,7 @@ func initOTel() {
 
 	otlphttpExporter, err := otlpmetrichttp.New(
 		context.Background(),
-		otlpmetrichttp.WithEndpoint("localhost:4317"),
+		otlpmetrichttp.WithEndpoint("localhost:4318"),
 		otlpmetrichttp.WithInsecure(),
 	)
 
@@ -94,8 +95,9 @@ func initOTel() {
 
 	periodicReader := metric.NewPeriodicReader(
 		// stdoutExporter,
-		// otlpgrpcExporter,
-		otlphttpExporter,
+		otlpgrpcExporter,
+		// otlphttpExporter,
+		metric.WithInterval(10*time.Second),
 	)
 
 	_ = periodicReader
@@ -109,9 +111,9 @@ func initOTel() {
 	_ = prometheusExporter
 
 	meterProvider := metric.NewMeterProvider(
-		// metric.WithResource(resource),
-		// metric.WithReader(periodicReader),
-		metric.WithReader(prometheusExporter),
+		metric.WithResource(resource),
+		metric.WithReader(periodicReader),
+		// metric.WithReader(prometheusExporter),
 	)
 
 	otel.SetMeterProvider(meterProvider)

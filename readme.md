@@ -37,6 +37,7 @@ Work in progress...
 This variant of the collector sends the collected data to [Azure Events Hubs](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about) - the main Azure real-time data ingestion service. Once the data is ingested into Event Hubs, there is a large number of real-time stream processing, data analytics and data storage services that you can use to extract insights from it.
 
 The Azure Event Hubs collector variant is relatively more complex than the others. It is worth taking a look at its internal components so you can configure it to work efficiently.
+
 ```mermaid
 graph LR
     subgraph BDC[Bulk Data Collector]
@@ -173,13 +174,18 @@ I will use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/o
 receivers:
   otlp:
     protocols:
-      # grpc:
-      #  endpoint: "0.0.0.0:4317"
+      grpc:
+       endpoint: "0.0.0.0:4317"
       http:
-        endpoint: "0.0.0.0:4317"
+        endpoint: "0.0.0.0:4318"
 processors:
   batch:
+    timeout: 10s
+    send_batch_size: 512
+    send_batch_max_size: 1024
 exporters:
+  azuremonitor:
+      connection_string: <Add Azure Monitor Application Insights connection string here>
   azuredataexplorer:
     cluster_uri: <Add the Azure Data Explorer URL here>
     tenant_id: <Add the Azure tenant ID here>
@@ -201,8 +207,8 @@ service:
       exporters: [azuredataexplorer]
     metrics:
       receivers: [otlp]
-      processors: []
-      exporters: [azuredataexplorer]
+      processors: [batch]
+      exporters: [azuremonitor, azuredataexplorer]
     traces:
       receivers: [otlp]
       processors: [batch]

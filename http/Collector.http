@@ -16,6 +16,12 @@ ReportTimestamp,ParameterName,ParameterValue,ParameterType
 1364529149,Device.MoCA.Interface.1.Stats.BytesReceived,200543250,unsignedLong
 1364529149,Device.MoCA.Interface.1.Stats.BytesSent,7682161,unsignedLong
 1364529149,Device.MoCA.Interface.1.Stats.MultiPktReceived,890682272,unsignedLong
+1364529149,Device.DeviceInfo.ProcessStatus.CPUUsage,26,unsignedLong
+1364529149,Device.MoCA.Interface.2.Stats.BroadPktSent,93247,unsignedLong
+1364529149,Device.MoCA.Interface.2.Stats.BytesReceived,900543250,unsignedLong
+1364529149,Device.MoCA.Interface.2.Stats.BytesSent,93247,unsignedLong
+1364529149,Device.MoCA.Interface.2.Stats.MultiPktReceived,900543250,unsignedLong
+1364529149,Device.DeviceInfo.MemoryStatus.Free,2400,unsignedLong
 
 ###
 
@@ -46,7 +52,9 @@ BBF-Report-Format: NameValuePair
             "Device.MoCA.Interface.2.Stats.BroadPktSent": 93247,
             "Device.MoCA.Interface.2.Stats.BytesReceived": 900543250,
             "Device.MoCA.Interface.2.Stats.BytesSent": 93247,
-            "Device.MoCA.Interface.2.Stats.MultiPktReceived": 900543250
+            "Device.MoCA.Interface.2.Stats.MultiPktReceived": 900543250,
+            "Device.DeviceInfo.ProcessStatus.CPUUsage": 26,
+            "Device.DeviceInfo.MemoryStatus.Free": 2400,
         }
     ]
 }

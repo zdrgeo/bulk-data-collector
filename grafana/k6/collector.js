@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { check } from 'k6';
-import { randomString, randomItem } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
+import { randomIntBetween, randomString, randomItem } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
 
 const device = {
   oui: '766768',
@@ -22,17 +22,25 @@ const deviceSerialNumbers = [
 
 function csvParameterPerRow() {
   // const deviceSerialNumber = '400102030405',
-  const deviceSerialNumber = randomItem(deviceSerialNumbers);
+  // const deviceSerialNumber = randomItem(deviceSerialNumbers);
   // const deviceSerialNumber = randomString(12, '0123456789ABCDEF')
-  // const deviceSerialNumber = randomString(4, '01AB') // Bound to range of 256 serial numbers
+  const deviceSerialNumber = randomString(4, '01AB') // Bound to range of 256 serial numbers
 
   const url = `http://localhost:8088/collector?oui=${device.oui}&pc=${device.productClass}&sn=${deviceSerialNumber}`;
 
+  const timestamp = Math.floor(Date.now() / 1000)
+
   const body = `ReportTimestamp,ParameterName,ParameterValue,ParameterType
-1364529149,Device.MoCA.Interface.1.Stats.BroadPktSent,25248,unsignedLong
-1364529149,Device.MoCA.Interface.1.Stats.BytesReceived,200543250,unsignedLong
-1364529149,Device.MoCA.Interface.1.Stats.BytesSent,7682161,unsignedLong
-1364529149,Device.MoCA.Interface.1.Stats.MultiPktReceived,890682272,unsignedLong`;
+${timestamp},Device.MoCA.Interface.1.Stats.BroadPktSent,${randomIntBetween(0, 10_000)},unsignedLong
+${timestamp},Device.MoCA.Interface.1.Stats.BytesReceived,${randomIntBetween(0, 10_000)},unsignedLong
+${timestamp},Device.MoCA.Interface.1.Stats.BytesSent,${randomIntBetween(0, 10_000)},unsignedLong
+${timestamp},Device.MoCA.Interface.1.Stats.MultiPktReceived,${randomIntBetween(0, 10_000)},unsignedLong
+${timestamp},Device.MoCA.Interface.2.Stats.BroadPktSent,${randomIntBetween(0, 10_000)},unsignedLong
+${timestamp},Device.MoCA.Interface.2.Stats.BytesReceived,${randomIntBetween(0, 10_000)},unsignedLong
+${timestamp},Device.MoCA.Interface.2.Stats.BytesSent,${randomIntBetween(0, 10_000)},unsignedLong
+${timestamp},Device.MoCA.Interface.2.Stats.MultiPktReceived,${randomIntBetween(0, 10_000)},unsignedLong
+${timestamp},Device.DeviceInfo.ProcessStatus.CPUUsage,${randomIntBetween(0, 100)},unsignedLong
+${timestamp},Device.DeviceInfo.MemoryStatus.Free,${randomIntBetween(0, 8_000)},unsignedLong`;
 
   const params = {
     headers: {
@@ -53,24 +61,28 @@ function csvParameterPerRow() {
 
 function jsonNameValuePair() {
   // const deviceSerialNumber = '400102030405',
-  const deviceSerialNumber = randomItem(deviceSerialNumbers);
+  // const deviceSerialNumber = randomItem(deviceSerialNumbers);
   // const deviceSerialNumber = randomString(12, '0123456789ABCDEF')
-  // const deviceSerialNumber = randomString(4, '01AB') // Bound to range of 265 serial numbers
+  const deviceSerialNumber = randomString(4, '01AB') // Bound to range of 265 serial numbers
 
   const url = `http://localhost:8088/collector?oui=${device.oui}&pc=${device.productClass}&sn=${deviceSerialNumber}`;
+
+  const timestamp = Math.floor(Date.now() / 1000)
 
   const body = JSON.stringify({
     'Report': [
       {
-        'CollectionTime': 1364529149,
-        'Device.MoCA.Interface.1.Stats.BroadPktSent': 25248,
-        'Device.MoCA.Interface.1.Stats.BytesReceived': 200543250,
-        'Device.MoCA.Interface.1.Stats.BytesSent': 25248,
-        'Device.MoCA.Interface.1.Stats.MultiPktReceived': 200543250,
-        'Device.MoCA.Interface.2.Stats.BroadPktSent': 93247,
-        'Device.MoCA.Interface.2.Stats.BytesReceived': 900543250,
-        'Device.MoCA.Interface.2.Stats.BytesSent': 93247,
-        'Device.MoCA.Interface.2.Stats.MultiPktReceived': 900543250
+        'CollectionTime': timestamp,
+        'Device.MoCA.Interface.1.Stats.BroadPktSent': randomIntBetween(0, 10_000),
+        'Device.MoCA.Interface.1.Stats.BytesReceived': randomIntBetween(0, 10_000),
+        'Device.MoCA.Interface.1.Stats.BytesSent': randomIntBetween(0, 10_000),
+        'Device.MoCA.Interface.1.Stats.MultiPktReceived': randomIntBetween(0, 10_000),
+        'Device.MoCA.Interface.2.Stats.BroadPktSent': randomIntBetween(0, 10_000),
+        'Device.MoCA.Interface.2.Stats.BytesReceived': randomIntBetween(0, 10_000),
+        'Device.MoCA.Interface.2.Stats.BytesSent': randomIntBetween(0, 10_000),
+        'Device.MoCA.Interface.2.Stats.MultiPktReceived': randomIntBetween(0, 10_000),
+        'Device.DeviceInfo.ProcessStatus.CPUUsage': randomIntBetween(0, 100),
+        'Device.DeviceInfo.MemoryStatus.Free': randomIntBetween(0, 8_000),
       }
     ]
   });

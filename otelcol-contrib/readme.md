@@ -1,4 +1,4 @@
-### Open Telemetry Collector
+### OpenTelemetry Collector
 
 Docker
 ```
@@ -17,17 +17,15 @@ kubectl create configmap otelcol-contrib-config --from-file=config.yaml
 
 kubectl apply -f deployment.yaml
 kubectl delete -f deployment.yaml
-
-kubectl create configmap otelcol-contrib-config
 ```
 
 ### Azure Data Explorer
 
-[Open Telemetry Collector - Azure Data Explorer Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/azuredataexplorerexporter/README.md)
+[OpenTelemetry Collector - Azure Data Explorer Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/azuredataexplorerexporter/README.md)
 
-[Azure Data Explorer - Open Telemetry Connector](https://learn.microsoft.com/en-us/azure/data-explorer/open-telemetry-connector?tabs=command-line)
+[Azure Data Explorer - OpenTelemetry Connector](https://learn.microsoft.com/en-us/azure/data-explorer/open-telemetry-connector?tabs=command-line)
 
-```Kusto
+```kusto
 .create-merge table OTELLogs (Timestamp:datetime, ObservedTimestamp:datetime, TraceID:string, SpanID:string, SeverityText:string, SeverityNumber:int, Body:string, ResourceAttributes:dynamic, LogsAttributes:dynamic)
 .create-merge table OTELMetrics (Timestamp:datetime, MetricName:string, MetricType:string, MetricUnit:string, MetricDescription:string, MetricValue:real, Host:string, ResourceAttributes:dynamic,MetricAttributes:dynamic)
 .create-merge table OTELTraces (TraceID:string, SpanID:string, ParentID:string, SpanName:string, SpanStatus:string, SpanKind:string, StartTime:datetime, EndTime:datetime, ResourceAttributes:dynamic, TraceAttributes:dynamic, Events:dynamic, Links:dynamic)
@@ -39,4 +37,10 @@ kubectl create configmap otelcol-contrib-config
 .alter table OTELTraces policy streamingingestion enable
 
 .add database oteldb ingestors ('aadapp=325195ae-1ad3-4170-879a-0e33f0aeb00f') 'Azure Data Explorer App Registration'
+```
+
+```kusto
+.clear table OTELLogs data
+.clear table OTELMetrics data
+.clear table OTELTraces data
 ```

@@ -82,7 +82,7 @@ func initAzureEventHubs() {
 
 	otlphttpExporter, err := otlpmetrichttp.New(
 		context.Background(),
-		otlpmetrichttp.WithEndpoint("localhost:4317"),
+		otlpmetrichttp.WithEndpoint("localhost:4318"),
 		otlpmetrichttp.WithInsecure(),
 	)
 
@@ -102,7 +102,7 @@ func initAzureEventHubs() {
 		stdoutExporter,
 		// otlpgrpcExporter,
 		// otlphttpExporter,
-		metric.WithInterval(30*time.Second),
+		metric.WithInterval(10*time.Second),
 	)
 
 	_ = periodicReader
