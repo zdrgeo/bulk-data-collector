@@ -30,8 +30,6 @@ graph LR
     BDC((Bulk Data Collector))
 ```
 
-Work in progress...
-
 ## Azure Event Hubs
 
 This variant of the collector sends the collected data to [Azure Events Hubs](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about) - the main Azure real-time data ingestion service. Once the data is ingested into Event Hubs, there is a large number of real-time stream processing, data analytics and data storage services that you can use to extract insights from it.
@@ -288,6 +286,30 @@ go run main.go
 cd grafana/k6
 k6 run collector.js
 ```
+
+Open Azure Monitor and run the following query.
+
+```kusto
+customMetrics
+| where name == "Device_DeviceInfo_ProcessStatus_CPUUsage"
+| extend OUI = tostring(customDimensions.OUI), ProductClass = tostring(customDimensions.ProductClass), SerialNumber = tostring(customDimensions.SerialNumber)
+| where SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| summarize AvvgCPUUsage = avg(value) by SerialNumber, Time = bin(timestamp, 30s)
+```
+
+Switch from Results to Chart tab. Change chart type to "Line".
+
+Open [Azure Data Explorer](https://dataexplorer.azure.com). Add connection to your Azure Data Explorer cluster. Select the "oteldb" database and run the following query.
+
+```kusto
+OTELMetrics
+| where MetricName == "Device_DeviceInfo_ProcessStatus_CPUUsage"
+| extend OUI = tostring(MetricAttributes.OUI), ProductClass = tostring(MetricAttributes.ProductClass), SerialNumber = tostring(MetricAttributes.SerialNumber)
+| where SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| summarize AvgCPUUsage = avg(MetricValue) by SerialNumber, Time = bin(Timestamp, 30s)
+```
+
+Add a line chart visual.
 
 Work in progress...
 
