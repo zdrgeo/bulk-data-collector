@@ -124,7 +124,7 @@ sum (partition_batch_counter_total)
 sum (partition_event_counter_total)
 ```
 
-3. Run the bulk data collector
+3. Run the Bulk Data Collector
 
 ```shell
 cd cmd/azureeventhubs
@@ -277,7 +277,7 @@ cd otelcol-contrib
 docker compose up -d
 ```
 
-6. Run the bulk data collector
+6. Run the Bulk Data Collector
 
 ```shell
 cd cmd/otel
@@ -291,7 +291,7 @@ cd grafana/k6
 k6 run collector.js
 ```
 
-Open Azure Monitor and run the following query to visualize CPU Usage metric.
+Open Azure Monitor and run the following query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 customMetrics
@@ -305,7 +305,7 @@ Switch from Results to Chart tab. Change chart type to "Line".
 
 ![Visualization of CPU Usage metric in Azure Monitor](./docs/azure_monitor_cpuusage.png)
 
-Open [Azure Data Explorer](https://dataexplorer.azure.com). Add connection to your Azure Data Explorer cluster. Select the "oteldb" database and run the following query to visualize CPU Usage metric.
+Open [Azure Data Explorer](https://dataexplorer.azure.com). Add connection to your Azure Data Explorer cluster. Select the "oteldb" database and run the following query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 OTELMetrics
