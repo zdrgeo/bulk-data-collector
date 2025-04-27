@@ -213,6 +213,8 @@ service:
       exporters: [azuredataexplorer]
 ```
 
+This configures the OTel collector to accept metrics on standard OTLP ports and then to export them to Azure Monitor and Azure Data Explorer simultaneously.
+
 3. Add `config.env` to `cmd/otel`
 
 ```env
@@ -266,6 +268,8 @@ otel:
         unit: "byte"
 ```
 
+This configures Bulk Data Collector to capture "Device.DeviceInfo.ProcessStatus.CPUUsage", "Device.DeviceInfo.MemoryStatus.Free", etc. properties from the CPE reports, to transform them to OTel metrics "Device_DeviceInfo_ProcessStatus_CPUUsage", "Device_DeviceInfo_MemoryStatus_Free", etc. and then to export those metrics to the running OTel collector.
+
 5. Run the OTel Contrib collector
 
 ```shell
@@ -287,7 +291,7 @@ cd grafana/k6
 k6 run collector.js
 ```
 
-Open Azure Monitor and run the following query.
+Open Azure Monitor and run the following query to visualize CPU Usage metric.
 
 ```kusto
 customMetrics
@@ -299,7 +303,9 @@ customMetrics
 
 Switch from Results to Chart tab. Change chart type to "Line".
 
-Open [Azure Data Explorer](https://dataexplorer.azure.com). Add connection to your Azure Data Explorer cluster. Select the "oteldb" database and run the following query.
+![Visualization of CPU Usage metric in Azure Monitor](./docs/azure_monitor_cpuusage.png)
+
+Open [Azure Data Explorer](https://dataexplorer.azure.com). Add connection to your Azure Data Explorer cluster. Select the "oteldb" database and run the following query to visualize CPU Usage metric.
 
 ```kusto
 OTELMetrics
@@ -310,6 +316,8 @@ OTELMetrics
 ```
 
 Add a line chart visual.
+
+![Visualization of CPU Usage metric in Azure Data Explorer](./docs/azure_data_explorer_cpuusage.png)
 
 Work in progress...
 
