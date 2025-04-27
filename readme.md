@@ -305,7 +305,7 @@ Switch from Results to Chart tab. Change chart type to "Line".
 
 ![Visualization of CPU Usage metric in Azure Monitor](./docs/azure_monitor_cpuusage.png)
 
-Open [Azure Data Explorer](https://dataexplorer.azure.com). Add connection to your Azure Data Explorer cluster. Select the "oteldb" database and run the following query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+Open [Azure Data Explorer](https://dataexplorer.azure.com). Connect to your Azure Data Explorer cluster. Select the "oteldb" database and run the following query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 OTELMetrics
