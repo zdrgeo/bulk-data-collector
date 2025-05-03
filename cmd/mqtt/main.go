@@ -16,12 +16,6 @@ import (
 	mqttservices "github.com/zdrgeo/bulk-data-collector/pkg/services/mqtt"
 )
 
-const (
-	topicName = "collector"
-	clientID  = "100000-1"
-	username  = "100000"
-)
-
 var (
 	logger            *slog.Logger
 	connectionManager *autopaho.ConnectionManager
@@ -72,10 +66,11 @@ func initMQTT() {
 		KeepAlive:                     20,
 		CleanStartOnInitialConnection: false,
 		SessionExpiryInterval:         3600,
-		ConnectUsername:               username,
+		ConnectUsername:               viper.GetString("MQTT_CONNECT_USERNAME"),
+		ConnectPassword:               []byte(viper.GetString("MQTT_CONNECT_PASSWORD")),
 		TlsCfg:                        tlsCfg,
 		ClientConfig: paho.ClientConfig{
-			ClientID: clientID,
+			ClientID: viper.GetString("MQTT_CLIENT_ID"),
 		},
 	}
 
@@ -90,7 +85,7 @@ func main() {
 
 func mainMQTT() {
 	mqttCollectorServiceOptions := &mqttservices.MQTTCollectorServiceOptions{
-		TopicName: topicName,
+		TopicName: viper.GetString("TOPIC_NAME"),
 	}
 
 	collectorService := mqttservices.NewMQTTCollectorService(connectionManager, mqttCollectorServiceOptions)
