@@ -84,7 +84,98 @@ When the collector starts, it queries the Event Hub management API to retrieve t
 
 ### Example
 
-1. Add `config.env` to `cmd/azureeventhubs`
+Among the many options available in Azure for processing the ingested data, you can use [Azure Stream Analytics](https://learn.microsoft.com/en-us/azure/stream-analytics/) to monitor the devices' CPU and memory usage in real time, at scale. The stream processing job can trigger an alarm and store it in [Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/) when the average CPU utilization or available memory on any device crosses predefined thresholds.
+
+In scenarios like this, it is common practice to store the threshold configuration as JSON blob in Azure Storage Blob container. The stream processing job can read this blob and use it as reference data to join with the event stream.
+
+1. Create a storage account and a blob container "alarms". Create `limits/limits.json` blob containing the tresholds.
+
+```json
+// limits/limits.json
+
+[
+  {
+    "OUI": "766768",
+    "ProductClass": "ONU",
+    "ParameterName" : "[Device.DeviceInfo.ProcessStatus.CPUUsage]",
+    "MinValue" : 0,
+    "MaxValue" : 80
+  },
+  {
+    "OUI": "766768",
+    "ProductClass": "ONU",
+    "ParameterName" : "[Device.DeviceInfo.MemoryStatus.Free]",
+    "MinValue" : 256,
+    "MaxValue" : 2147483647
+  }
+]
+```
+
+2. Create a Cosmos DB account, database "collector" and containers "devices" and "alarms". Set the default TTL for the "alarms" collection to 10 minutes.
+
+3. Create a Stream Analytics job with two inputs and one output
+
+Inputs:
+
+- "events" connected to the Event Hub in which the bulk data collector ingests events.
+- "limits" connected to the `limits/limits.json` blob.
+
+Outputs:
+
+- "alarms" connected to the Cosmos DB collection "alarms".
+
+Query:
+
+```sql
+WITH eventswithlimits AS (
+  SELECT
+    System.Timestamp() AS Time,
+    events.PartitionId,
+    events.OUI,
+    events.ProductClass,
+    events.SerialNumber,
+    limits.ParameterName,
+    GetRecordPropertyValue(events.Parameters, limits.ParameterName) AS ParameterValue,
+    limits.MinValue AS LimitMinValue,
+    limits.MaxValue AS LimitMaxValue
+  FROM events
+  JOIN limits ON limits.OUI = events.OUI AND limits.ProductClass = events.ProductClass
+)
+
+SELECT
+  System.Timestamp() AS Time,
+  PartitionId,
+  OUI + '-' + ProductClass + '-' + SerialNumber AS DeviceName,
+  OUI + '-' + ProductClass + '-' + SerialNumber + '-' + ParameterName AS AlarmName,
+  OUI,
+  ProductClass,
+  SerialNumber,
+  ParameterName,
+  LimitMinValue,
+  LimitMaxValue,
+  MIN(ParameterValue) AS MinParameterValue,
+  MAX(ParameterValue) AS MaxParameterValue,
+  AVG(ParameterValue) AS AvgParameterValue
+INTO alarms
+FROM eventswithlimits
+GROUP BY
+  TumblingWindow(minute, 1),
+  PartitionId,
+  OUI,
+  ProductClass,
+  SerialNumber,
+  ParameterName,
+  LimitMinValue,
+  LimitMaxValue
+HAVING MIN(ParameterValue) < LimitMinValue OR MAX(ParameterValue) > LimitMaxValue
+-- HAVING NOT AVG(ParameterValue) BETWEEN LimitMinValue AND LimitMaxValue
+```
+
+Stream processing job:
+
+![Azure Stream Analytics job](./docs/azure_streamanalytics.png)
+
+4. Add `config.env` to `cmd/azureeventhubs`
 
 ```env
 # cmd/azureeventhubs/config.env
@@ -95,7 +186,7 @@ PARTITION_QUEUE_LIMIT=100
 PARTITION_PRODUCERS_COUNT=1
 ```
 
-2. Run Prometheus and Grafana
+5. Run Prometheus and Grafana
 
 ```shell
 cd prometheus
@@ -108,9 +199,7 @@ Create a graph with the following metrics to monitor the number of events proces
 
 ```promql
 partition_queue_counter{partition=~".*"}
-
 partition_batch_counter_total{partition=~".*"}
-
 partition_event_counter_total{partition=~".*"}
 ```
 
@@ -118,27 +207,30 @@ or alternatively, use the following aggregate metrics to monitor the total event
 
 ```promql
 sum (partition_queue_counter)
-
 sum (partition_batch_counter_total)
-
 sum (partition_event_counter_total)
 ```
 
-3. Run the Bulk Data Collector
+6. Run the Bulk Data Collector
 
 ```shell
 cd cmd/azureeventhubs
 go run main.go
 ```
 
-4. Run the test
+7. Run the test
 
 ```shell
 cd grafana/k6
 k6 run collector.js
 ```
+CPU usage alarm:
 
-Work in progress...
+![CPU usage alarm in Azure Coosmos DB](./docs/azure_cosmos_alarms_cpuusage.png)
+
+Memory alarm:
+
+![Memory alarm in Azure Data Explorer](./docs/azure_cosmos_alarms_memory.png)
 
 ## OpenTelemetry (OTel)
 
@@ -146,7 +238,7 @@ This variant of the collector works very differently — it uses a configurable 
 
 ### Example
 
-I will use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) and [Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/) exporters.
+You can use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) and [Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/) exporters.
 
 1. Create the necessary tables in Azure Data Explorer
 
@@ -291,7 +383,7 @@ cd grafana/k6
 k6 run collector.js
 ```
 
-Open Azure Monitor and run the following query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+Open Azure Monitor and run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 customMetrics
@@ -305,7 +397,7 @@ Switch from Results to Chart tab. Change chart type to "Line".
 
 ![Visualization of CPU Usage metric in Azure Monitor](./docs/azure_monitor_cpuusage.png)
 
-Open [Azure Data Explorer](https://dataexplorer.azure.com). Connect to your Azure Data Explorer cluster. Select the "oteldb" database and run the following query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+Open [Azure Data Explorer](https://dataexplorer.azure.com). Connect to your Azure Data Explorer cluster. Select the "oteldb" database and run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 OTELMetrics
@@ -317,9 +409,7 @@ OTELMetrics
 
 Add a line chart visual.
 
-![Visualization of CPU Usage metric in Azure Data Explorer](./docs/azure_data_explorer_cpuusage.png)
-
-Work in progress...
+![Visualization of CPU Usage metric in Azure Data Explorer](./docs/azure_dataexplorer_cpuusage.png)
 
 ## MQTT
 
@@ -327,7 +417,7 @@ This variant of the collector sends the collected data to any MQTT v5 compatible
 
 ### Example
 
-I will use [Azure Event Grid](https://learn.microsoft.com/en-us/azure/event-grid/) with MQTT feature enabled.
+You can use [Azure Event Grid](https://learn.microsoft.com/en-us/azure/event-grid/) with MQTT feature enabled.
 
 1. Add the cert and key files to `cmd/mqtt`
 
