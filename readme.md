@@ -199,7 +199,7 @@ PARTITION_QUEUE_LIMIT=100
 PARTITION_PRODUCERS_COUNT=1
 ```
 
-5. Run Prometheus and Grafana
+5. Run Prometheus and Grafana (this is required only if you need to monitor the pipeline performance)
 
 ```shell
 cd prometheus
@@ -238,7 +238,11 @@ cd grafana/k6
 k6 run collector.js
 ```
 
-Open the "collector" database and the "alarms" container in [Azure Cosmos DB Data Explorer](https://cosmos.azure.com).
+Open the "collector" database and the "points" and "alarms" containers in [Azure Cosmos DB Data Explorer](https://cosmos.azure.com).
+
+Data points collected in the "points" container: 
+
+![Data points in Azure Coosmos DB](./docs/azure_cosmos_points.png)
 
 CPU usage alarm in the "alarms" container:
 
