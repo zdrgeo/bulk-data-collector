@@ -23,10 +23,10 @@ This repository explores several practical options for implementing this approac
 ```mermaid
 graph LR
     ACS[ACS]
-    ACS <-.-> CPE1
-    ACS <-.-> CPEn
-    CPE1[CPE 1] --> BDC
-    CPEn[CPE N] --> BDC
+    ACS <-.->|commands| CPE1
+    ACS <-.->|commands| CPEn
+    CPE1[CPE 1] -->|data point events| BDC
+    CPEn[CPE N] -->|data point events| BDC
     BDC((Bulk Data Collector))
 ```
 
