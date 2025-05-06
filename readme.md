@@ -98,22 +98,22 @@ In scenarios like this, it is common practice to store the threshold configurati
     "OUI": "766768",
     "ProductClass": "ONU",
     "ParameterName" : "[Device.DeviceInfo.ProcessStatus.CPUUsage]",
-    "MinValue" : 0,
-    "MaxValue" : 80
+    "MinValue": 0,
+    "MaxValue": 80
   },
   {
     "OUI": "766768",
     "ProductClass": "ONU",
     "ParameterName" : "[Device.DeviceInfo.MemoryStatus.Free]",
-    "MinValue" : 256,
-    "MaxValue" : 2147483647
+    "MinValue": 256,
+    "MaxValue": 2147483647
   }
 ]
 ```
 
-2. Create a Cosmos DB account, database "collector" and containers "devices" and "alarms". Set the default TTL for the "alarms" collection to 10 minutes.
+2. Create a Cosmos DB account, database "collector" and containers "points" and "alarms". Set the partition key to `/DeviceName` for both containers. Set the default TTL for the "alarms" collection to 10 minutes to ensure that alarms are automatically deleted 10 minutes after their last update by the Stream Analytics job.
 
-3. Create a Stream Analytics job with two inputs and one output
+3. Create a Stream Analytics job with the following inputs, outputs and SAQL query:
 
 Inputs:
 
@@ -122,9 +122,10 @@ Inputs:
 
 Outputs:
 
-- "alarms" connected to the Cosmos DB collection "alarms".
+- "points" connected to the Cosmos DB collection "points". Set `PointName` as "Document ID" field.
+- "alarms" connected to the Cosmos DB collection "alarms". Set `AlarmName` as "Document ID" field.
 
-Query:
+SAQL Query:
 
 ```sql
 WITH eventswithlimits AS (
@@ -141,6 +142,18 @@ WITH eventswithlimits AS (
   FROM events
   JOIN limits ON limits.OUI = events.OUI AND limits.ProductClass = events.ProductClass
 )
+
+SELECT
+  System.Timestamp() AS Time,
+  PartitionId,
+  OUI + '-' + ProductClass + '-' + SerialNumber AS DeviceName,
+  GetMetadataPropertyValue(events, 'EventId') AS PointName,
+  OUI,
+  ProductClass,
+  SerialNumber,
+  Parameters
+INTO points
+FROM events
 
 SELECT
   System.Timestamp() AS Time,
@@ -171,7 +184,7 @@ HAVING MIN(ParameterValue) < LimitMinValue OR MAX(ParameterValue) > LimitMaxValu
 -- HAVING NOT AVG(ParameterValue) BETWEEN LimitMinValue AND LimitMaxValue
 ```
 
-Stream processing job:
+The Stream Analytics job should look like the screenshot below:
 
 ![Azure Stream Analytics job](./docs/azure_streamanalytics.png)
 
@@ -224,11 +237,14 @@ go run main.go
 cd grafana/k6
 k6 run collector.js
 ```
-CPU usage alarm:
+
+Open the "collector" database and the "alarms" container in [Azure Cosmos DB Data Explorer](https://cosmos.azure.com).
+
+CPU usage alarm in the "alarms" container:
 
 ![CPU usage alarm in Azure Coosmos DB](./docs/azure_cosmos_alarms_cpuusage.png)
 
-Memory alarm:
+Memory usage alarm in the "alarms" container:
 
 ![Memory alarm in Azure Data Explorer](./docs/azure_cosmos_alarms_memory.png)
 
