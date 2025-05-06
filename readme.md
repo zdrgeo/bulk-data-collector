@@ -380,7 +380,7 @@ otel:
         unit: "byte"
 ```
 
-This configures Bulk Data Collector to capture "Device.DeviceInfo.ProcessStatus.CPUUsage", "Device.DeviceInfo.MemoryStatus.Free", etc. properties from the CPE reports, to transform them to OTel metrics "Device_DeviceInfo_ProcessStatus_CPUUsage", "Device_DeviceInfo_MemoryStatus_Free", etc. and then to export those metrics to the running OTel collector.
+This configures the bulk data collector to capture "Device.DeviceInfo.ProcessStatus.CPUUsage", "Device.DeviceInfo.MemoryStatus.Free", etc. properties from the CPE reports, to transform them to OTel metrics "Device_DeviceInfo_ProcessStatus_CPUUsage", "Device_DeviceInfo_MemoryStatus_Free", etc. and then to export those metrics to the running OTel collector.
 
 5. Run the OTel Contrib collector
 
