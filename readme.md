@@ -299,7 +299,7 @@ exporters:
   azuredataexplorer:
     cluster_uri: <Add the Azure Data Explorer URL here>
     tenant_id: <Add the Azure tenant ID here>
-    application_id: <Add the applicatioin ID here>
+    application_id: <Add the application ID here>
     application_key: <Add the application key here>
     # db_name: "oteldb"
     # logs_table_name: "OTELLogs"
