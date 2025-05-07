@@ -2,7 +2,7 @@
 
 ## Overview
 
-In the telecom industry, CWMP (also known as TR-069) is a widely adopted protocol — one of the best options for ISPs to remotely manage millions of devices. The protocol defines two main roles: the CPE (Customer Premises Equipment) devices and the ACS (Auto-Configuration Server), which controls them.
+In the telecom industry, CWMP (also known as TR-069) is a widely adopted protocol and a preferred solution for ISPs to remotely manage anywhere from tens of thousands to millions of customer premises devices. The protocol defines two main roles: the CPE (Customer Premises Equipment) devices and the ACS (Auto-Configuration Server), which controls them.
 
 Being SOAP-based, CWMP is well-suited for remote device management, but presents challenges when collecting large volumes of telemetry data from the devices. To address this, an extension to the protocol allows devices to periodically submit bulk data reports in CSV or JSON format to a separate endpoint known as bulk data collector.
 
