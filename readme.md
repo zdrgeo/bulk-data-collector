@@ -82,7 +82,7 @@ When the collector starts, it queries the Event Hub management API to retrieve t
 > 
 > When used alongside the Event Hubs telemetry available in the Azure portal, these metrics provide good visibility to the pipeline performance.
 
-### Example
+### Example 1
 
 Among the many options available in Azure for processing the ingested data, you can use [Azure Stream Analytics](https://learn.microsoft.com/en-us/azure/stream-analytics/) to monitor the devices' CPU and memory usage in real time, at scale. The stream processing job can trigger an alarm and store it in [Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/) when the average CPU utilization or available memory on any device crosses predefined thresholds.
 
@@ -111,13 +111,13 @@ In scenarios like this, it is common practice to store the threshold configurati
 ]
 ```
 
-2. Create a Cosmos DB account, database "collector" and containers "points" and "alarms". Set the partition key to `/DeviceName` for both containers. Set the default TTL for the "alarms" collection to 10 minutes to ensure that alarms are automatically deleted 10 minutes after their last update by the Stream Analytics job.
+2. Create a Cosmos DB account. Open [Azure Cosmos DB Data Explorer](https://cosmos.azure.com) and create a database "collector" and containers "points" and "alarms". Set the partition key to `/DeviceName` for both containers. Set the default TTL for the "alarms" collection to 10 minutes to ensure that alarms are automatically deleted 10 minutes after their last update by the Stream Analytics job.
 
 3. Create a Stream Analytics job with the following inputs, outputs and SAQL query:
 
 Inputs:
 
-- "events" connected to the Event Hub in which the bulk data collector ingests events.
+- "events" connected to the Event Hub in which the bulk data collector ingests events. Do not use the default consumer group `$Default`. Create a dedicated consumer group instead.
 - "limits" connected to the `limits/limits.json` blob.
 
 Outputs:
@@ -180,8 +180,10 @@ GROUP BY
   ParameterName,
   LimitMinValue,
   LimitMaxValue
+-- Trigger the alarm if any parameter value within the selected time window exceeds the specified limits.
 HAVING MIN(ParameterValue) < LimitMinValue OR MAX(ParameterValue) > LimitMaxValue
--- HAVING NOT AVG(ParameterValue) BETWEEN LimitMinValue AND LimitMaxValue
+-- Trigger the alarm if the average parameter value for the selected time window exceeds the specified limits.
+-- HAVING AVG(ParameterValue) NOT BETWEEN LimitMinValue AND LimitMaxValue
 ```
 
 The Stream Analytics job should look like the screenshot below:
@@ -206,7 +208,7 @@ cd prometheus
 docker compose --profile grafana up -d
 ```
 
-Open [Prometheus dashboard](http://localhost:9090) or [Grafana dashboard](http://localhost:3000).
+Open the Prometheus [dashboard](http://localhost:9090) or Grafana [dashboard](http://localhost:3000).
 
 Create a graph with the following metrics to monitor the number of events processed per partition
 
@@ -238,7 +240,7 @@ cd grafana/k6
 k6 run collector.js
 ```
 
-Open the "collector" database and the "points" and "alarms" containers in [Azure Cosmos DB Data Explorer](https://cosmos.azure.com).
+In [Azure Cosmos DB Data Explorer](https://cosmos.azure.com), open the "collector" database and the "points" and "alarms" containers.
 
 Data points collected in the "points" container: 
 
@@ -248,19 +250,105 @@ CPU usage alarm in the "alarms" container:
 
 ![CPU usage alarm in Azure Coosmos DB](./docs/azure_cosmos_alarms_cpuusage.png)
 
-Memory usage alarm in the "alarms" container:
+Free memory alarm in the "alarms" container:
 
-![Memory alarm in Azure Data Explorer](./docs/azure_cosmos_alarms_memory.png)
+![Free memory alarm in Azure Data Explorer](./docs/azure_cosmos_alarms_freememory.png)
+
+### Example 2
+
+1. Create a Data Explorer cluster. Open [Azure Data Explorer](https://dataexplorer.azure.com) and create a new database. Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) commands to create the necessary schema.
+
+```kusto
+.create-merge table DataPoints (Time:datetime, OUI:string, ProductClass:string, SerialNumber:string, Parameters:dynamic)
+
+.create table DataPoints ingestion json mapping "DataPoints_mapping" '[{"column":"Time", "Properties":{"Path":"$.x-opt-enqueued-time"}},{"column":"OUI", "Properties":{"Path":"$.OUI"}},{"column":"ProductClass", "Properties":{"Path":"$.ProductClass"}},{"column":"SerialNumber", "Properties":{"Path":"$.SerialNumber"}},{"column":"Parameters", "Properties":{"Path":"$.Parameters"}}]'
+
+.alter table DataPoints policy streamingingestion enable
+```
+
+2. Add `config.env` to `cmd/azureeventhubs`
+
+```env
+# cmd/azureeventhubs/config.env
+
+AZURE_EVENTHUBS_CONNECTION_STRING=<Add the Event Hubs connection string here>
+AZURE_EVENTHUBS_EVENTHUB=<Add the Event Hub name here>
+PARTITION_QUEUE_LIMIT=100
+PARTITION_PRODUCERS_COUNT=1
+```
+
+3. Run Prometheus and Grafana (this is required only if you need to monitor the pipeline performance)
+
+```shell
+cd prometheus
+docker compose --profile grafana up -d
+```
+
+Open the Prometheus [dashboard](http://localhost:9090) or the Grafana [dashboard](http://localhost:3000). Create a graph with the following metrics to monitor the number of events processed per partition
+
+```promql
+partition_queue_counter{partition=~".*"}
+partition_batch_counter_total{partition=~".*"}
+partition_event_counter_total{partition=~".*"}
+```
+
+or alternatively, use the following aggregate metrics to monitor the total event volume flowing through the entire pipeline
+
+```promql
+sum (partition_queue_counter)
+sum (partition_batch_counter_total)
+sum (partition_event_counter_total)
+```
+
+4. Run the Bulk Data Collector
+
+```shell
+cd cmd/azureeventhubs
+go run main.go
+```
+
+5. Run the test
+
+```shell
+cd grafana/k6
+k6 run collector.js
+```
+
+In [Azure Data Explorer](https://dataexplorer.azure.com) run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize the collected data points from the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+
+```kusto
+DataPoints
+```
+
+![Visualization of data points in Azure Data Explorer](./docs/azure_dataexplorer_datapoints.png)
+
+Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) queries to visualize the CPU usage and free memory of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+
+```kusto
+DataPoints
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| extend CPUUsage = todouble(Parameters["Device.DeviceInfo.ProcessStatus.CPUUsage"])
+| summarize AvgCPUUsage = avg(CPUUsage) by SerialNumber, Time = bin(Time, 30s)
+
+DataPoints
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| extend FreeMemory = todouble(Parameters["Device.DeviceInfo.MemoryStatus.Free"])
+| summarize AvgFreeMemory = avg(FreeMemory) by SerialNumber, Time = bin(Time, 30s)
+```
+
+Add a line chart visuals and pin them to a new dashboard.
+
+![Visualization of CPU usage and free memory in Azure Data Explorer](./docs/azure_dataexplorer_dashboard.png)
 
 ## OpenTelemetry (OTel)
 
 This variant of the collector works very differently — it uses a configurable mapping to extract selected properties from device reports and convert them into OTel metrics. These metrics are then periodically exported via the OTLP protocol to any [OpenTelemetry (OTel)](https://opentelemetry.io/docs/what-is-opentelemetry/) compatible collector. This enables direct integration of selected device metrics with a wide range of observability platforms.
 
-### Example
+### Example 1
 
-You can use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) and [Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/) exporters.
+You can use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) and [Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/) exporters to export the collected metrics to Azure Monitor and Azure Data Explorer simultaneously.
 
-1. Create the necessary tables in Azure Data Explorer
+1. Create an Application Insights instance and a Log Analytics workspace (both are components of Azure Monitor). Create a Data Explorer cluster. Open [Azure Data Explorer](https://dataexplorer.azure.com) and create a database "oteldb". Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) commands to create the necessary schema.
 
 ```kusto
 .create-merge table OTELLogs (Timestamp:datetime, ObservedTimestamp:datetime, TraceID:string, SpanID:string, SeverityText:string, SeverityNumber:int, Body:string, ResourceAttributes:dynamic, LogsAttributes:dynamic)
@@ -327,7 +415,7 @@ service:
 
 This configures the OTel collector to accept metrics on standard OTLP ports and then to export them to Azure Monitor and Azure Data Explorer simultaneously.
 
-3. Add `config.env` to `cmd/otel`
+3. Add an empty `config.env` to `cmd/otel`
 
 ```env
 # cmd/otel/config.env
@@ -403,39 +491,39 @@ cd grafana/k6
 k6 run collector.js
 ```
 
-Open Azure Monitor and run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+In the Application Insights instance or in the Log Analytics workspace open Logs and run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 customMetrics
 | where name == "Device_DeviceInfo_ProcessStatus_CPUUsage"
 | extend OUI = tostring(customDimensions.OUI), ProductClass = tostring(customDimensions.ProductClass), SerialNumber = tostring(customDimensions.SerialNumber)
-| where SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
-| summarize AvvgCPUUsage = avg(value) by SerialNumber, Time = bin(timestamp, 30s)
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| summarize AvgCPUUsage = avg(value) by SerialNumber, Time = bin(timestamp, 30s)
 ```
 
 Switch from Results to Chart tab. Change chart type to "Line".
 
-![Visualization of CPU Usage metric in Azure Monitor](./docs/azure_monitor_cpuusage.png)
+![Visualization of CPU usage metric in Azure Monitor](./docs/azure_monitor_cpuusage.png)
 
-Open [Azure Data Explorer](https://dataexplorer.azure.com). Connect to your Azure Data Explorer cluster. Select the "oteldb" database and run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU Usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+In [Azure Data Explorer](https://dataexplorer.azure.com), run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 OTELMetrics
 | where MetricName == "Device_DeviceInfo_ProcessStatus_CPUUsage"
 | extend OUI = tostring(MetricAttributes.OUI), ProductClass = tostring(MetricAttributes.ProductClass), SerialNumber = tostring(MetricAttributes.SerialNumber)
-| where SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
 | summarize AvgCPUUsage = avg(MetricValue) by SerialNumber, Time = bin(Timestamp, 30s)
 ```
 
 Add a line chart visual.
 
-![Visualization of CPU Usage metric in Azure Data Explorer](./docs/azure_dataexplorer_cpuusage.png)
+![Visualization of CPU usage metric in Azure Data Explorer](./docs/azure_dataexplorer_cpuusage.png)
 
 ## MQTT
 
 This variant of the collector sends the collected data to any MQTT v5 compatible broker.
 
-### Example
+### Example 1
 
 You can use [Azure Event Grid](https://learn.microsoft.com/en-us/azure/event-grid/) with MQTT feature enabled.
 
@@ -475,6 +563,6 @@ Work in progress...
 
 Work in progress...
 
-### Example
+### Example 1
 
 Work in progress...
