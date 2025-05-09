@@ -329,14 +329,16 @@ DataPoints
 | where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
 | extend CPUUsage = todouble(Parameters["Device.DeviceInfo.ProcessStatus.CPUUsage"])
 | summarize AvgCPUUsage = avg(CPUUsage) by SerialNumber, Time = bin(Time, 30s)
+| render linechart
 
 DataPoints
 | where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
 | extend FreeMemory = todouble(Parameters["Device.DeviceInfo.MemoryStatus.Free"])
 | summarize AvgFreeMemory = avg(FreeMemory) by SerialNumber, Time = bin(Time, 30s)
+| render linechart
 ```
 
-Add a line chart visuals and pin them to a new dashboard.
+Pin the line chart visuals to a dashboard.
 
 ![Visualization of CPU usage and free memory in Azure Data Explorer](./docs/azure_dataexplorer_dashboard.png)
 
@@ -499,9 +501,8 @@ customMetrics
 | extend OUI = tostring(customDimensions.OUI), ProductClass = tostring(customDimensions.ProductClass), SerialNumber = tostring(customDimensions.SerialNumber)
 | where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
 | summarize AvgCPUUsage = avg(value) by SerialNumber, Time = bin(timestamp, 30s)
+| render linechart
 ```
-
-Switch from Results to Chart tab. Change chart type to "Line".
 
 ![Visualization of CPU usage metric in Azure Monitor](./docs/azure_monitor_cpuusage.png)
 
@@ -513,9 +514,8 @@ OTELMetrics
 | extend OUI = tostring(MetricAttributes.OUI), ProductClass = tostring(MetricAttributes.ProductClass), SerialNumber = tostring(MetricAttributes.SerialNumber)
 | where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
 | summarize AvgCPUUsage = avg(MetricValue) by SerialNumber, Time = bin(Timestamp, 30s)
+| render linechart
 ```
-
-Add a line chart visual.
 
 ![Visualization of CPU usage metric in Azure Data Explorer](./docs/azure_dataexplorer_cpuusage.png)
 
