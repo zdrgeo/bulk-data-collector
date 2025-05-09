@@ -82,7 +82,7 @@ When the collector starts, it queries the Event Hub management API to retrieve t
 > 
 > When used alongside the Event Hubs telemetry available in the Azure portal, these metrics provide good visibility to the pipeline performance.
 
-### Example 1
+### Example 1 - use Azure Stream Analytics to process incoming events in real time, trigger alerts based on defined conditions, and store both events and alerts in Azure Cosmos DB
 
 Among the many options available in Azure for processing the ingested data, you can use [Azure Stream Analytics](https://learn.microsoft.com/en-us/azure/stream-analytics/) to monitor the devices' CPU and memory usage in real time, at scale. The stream processing job can trigger an alarm and store it in [Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/) when the average CPU utilization or available memory on any device crosses predefined thresholds.
 
@@ -254,7 +254,7 @@ Free memory alarm in the "alarms" container:
 
 ![Free memory alarm in Azure Data Explorer](./docs/azure_cosmos_alarms_freememory.png)
 
-### Example 2
+### Example 2 - use Azure Data Explorer to store and perform advanced analysis on the collected events
 
 1. Create a Data Explorer cluster. Open [Azure Data Explorer](https://dataexplorer.azure.com) and create a new database. Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) commands to create the necessary schema.
 
@@ -344,9 +344,9 @@ Add a line chart visuals and pin them to a new dashboard.
 
 This variant of the collector works very differently — it uses a configurable mapping to extract selected properties from device reports and convert them into OTel metrics. These metrics are then periodically exported via the OTLP protocol to any [OpenTelemetry (OTel)](https://opentelemetry.io/docs/what-is-opentelemetry/) compatible collector. This enables direct integration of selected device metrics with a wide range of observability platforms.
 
-### Example 1
+### Example 1 - Transform the collected events into metrics, use the OpenTelemetry (OTel) collector to process and export the metrics to both Azure Monitor and Azure Data Explorer
 
-You can use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) and [Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/) exporters to export the collected metrics to Azure Monitor and Azure Data Explorer simultaneously.
+You can use [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/) distribution with [Azure Monitor](https://learn.microsoft.com/en-us/azure/azure-monitor/) and [Azure Data Explorer](https://learn.microsoft.com/en-us/azure/data-explorer/) exporters to export the collected metrics to Azure Monitor and Azure Data Explorer simultaneously.
 
 1. Create an Application Insights instance and a Log Analytics workspace (both are components of Azure Monitor). Create a Data Explorer cluster. Open [Azure Data Explorer](https://dataexplorer.azure.com) and create a database "oteldb". Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) commands to create the necessary schema.
 
