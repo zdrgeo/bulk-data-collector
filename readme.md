@@ -314,7 +314,7 @@ cd grafana/k6
 k6 run collector.js
 ```
 
-In [Azure Data Explorer](https://dataexplorer.azure.com) run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize the collected data points from the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+In [Azure Data Explorer](https://dataexplorer.azure.com) run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize the collected data points.
 
 ```kusto
 DataPoints
