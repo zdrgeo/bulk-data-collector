@@ -254,7 +254,7 @@ Free memory alarm in the "alarms" container:
 
 ![Free memory alarm in Azure Data Explorer](./docs/azure_cosmos_alarms_freememory.png)
 
-### Example 2 - use Azure Data Explorer to store and perform advanced analysis on the collected events
+### Example 2 - use Azure Data Explorer to perform advanced real-time analysis on the collected events
 
 1. Create a Data Explorer cluster. Open [Azure Data Explorer](https://dataexplorer.azure.com) and create a new database. Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) commands to create the necessary schema.
 
@@ -322,17 +322,17 @@ DataPoints
 
 ![Visualization of data points in Azure Data Explorer](./docs/azure_dataexplorer_datapoints.png)
 
-Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) queries to visualize the CPU usage and free memory of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) queries to visualize the CPU usage and free memory of devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 DataPoints
-| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11")
 | extend CPUUsage = todouble(Parameters["Device.DeviceInfo.ProcessStatus.CPUUsage"])
 | summarize AvgCPUUsage = avg(CPUUsage) by SerialNumber, Time = bin(Time, 30s)
 | render linechart
 
 DataPoints
-| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11")
 | extend FreeMemory = todouble(Parameters["Device.DeviceInfo.MemoryStatus.Free"])
 | summarize AvgFreeMemory = avg(FreeMemory) by SerialNumber, Time = bin(Time, 30s)
 | render linechart
@@ -341,6 +341,25 @@ DataPoints
 Pin the line chart visuals to a dashboard.
 
 ![Visualization of CPU usage and free memory in Azure Data Explorer](./docs/azure_dataexplorer_dashboard.png)
+
+Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) queries to analyse the series of and detect anomalies in the CPU usage of device with serial numbers "AB11".
+
+```kusto
+let dataPoints = DataPoints
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB11");
+let startTime = toscalar(dataPoints | summarize min(Time));
+let endTime = toscalar(dataPoints | summarize max(Time));
+dataPoints
+| extend CPUUsage = todouble(Parameters["Device.DeviceInfo.ProcessStatus.CPUUsage"])
+| make-series AvgCPUUsage=avg(CPUUsage) default=double(null) on Time from startTime to endTime step 10s by SerialNumber
+| extend IntAvgCPUUsage = series_fill_linear(AvgCPUUsage)
+| project-away AvgCPUUsage
+| extend (anomaly, score, baseline) = series_decompose_anomalies(IntAvgCPUUsage, 1.5, -1, 'linefit')
+| project-away score, baseline
+| render anomalychart with(anomalycolumns=anomaly)
+```
+
+![Visualization of CPU usage anomaly detection in Azure Data Explorer](./docs/azure_dataexplorer_anomaly_detection.png)
 
 ## OpenTelemetry (OTel)
 
@@ -493,26 +512,26 @@ cd grafana/k6
 k6 run collector.js
 ```
 
-In the Application Insights instance or in the Log Analytics workspace open Logs and run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+In the Application Insights instance or in the Log Analytics workspace open Logs and run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU usage metric of devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 customMetrics
 | where name == "Device_DeviceInfo_ProcessStatus_CPUUsage"
 | extend OUI = tostring(customDimensions.OUI), ProductClass = tostring(customDimensions.ProductClass), SerialNumber = tostring(customDimensions.SerialNumber)
-| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11")
 | summarize AvgCPUUsage = avg(value) by SerialNumber, Time = bin(timestamp, 30s)
 | render linechart
 ```
 
 ![Visualization of CPU usage metric in Azure Monitor](./docs/azure_monitor_cpuusage.png)
 
-In [Azure Data Explorer](https://dataexplorer.azure.com), run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU usage metric of the devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
+In [Azure Data Explorer](https://dataexplorer.azure.com), run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) query to visualize CPU usage metric of devices with serial numbers "AB00", "AB01", "AB10" and "AB11".
 
 ```kusto
 OTELMetrics
 | where MetricName == "Device_DeviceInfo_ProcessStatus_CPUUsage"
 | extend OUI = tostring(MetricAttributes.OUI), ProductClass = tostring(MetricAttributes.ProductClass), SerialNumber = tostring(MetricAttributes.SerialNumber)
-| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11") 
+| where OUI == "766768" and ProductClass == "ONU" and SerialNumber in ("AB00", "AB01", "AB10", "AB11")
 | summarize AvgCPUUsage = avg(MetricValue) by SerialNumber, Time = bin(Timestamp, 30s)
 | render linechart
 ```
