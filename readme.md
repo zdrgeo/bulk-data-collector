@@ -10,10 +10,10 @@ This option not only provides a more efficient data format, but also decouples t
 
 This repository explores several practical options for implementing this approach.
 
-- [Azure Event Hubs](#azure-event-hubs)
-- [OpenTelemetry (OTel)](#opentelemetry-otel)
-- [MQTT](#mqtt)
-- [Dapr](#dapr)
+- [Azure Event Hubs](#azure-event-hubs) - sends the collected device parameters to Azure Events Hubs - the main Azure real-time data ingestion service
+- [OpenTelemetry (OTel)](#opentelemetry-otel) - converts selected device parameters into OTel metrics and sends them to any OTel compatible collector or backend
+- [MQTT](#mqtt) - sends the collected device parameters to any MQTT v5 compatible broker
+- [Dapr](#dapr) - sends the collected device parameters to any suitable Dapr binding, pub/sub, state store or actor
 
 > [!NOTE]
 > A newer protocol — USP (also known as TR-369) - aims to replace CWMP. It offers better performance, modern communication patterns, and enhanced capabilities, but it is not yet widely adopted. USP uses the same mechanism for telemetry data collection as CWMP, so the same approach can also be used with USP.
