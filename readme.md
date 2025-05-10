@@ -250,7 +250,7 @@ CPU usage alarm in the "alarms" container:
 
 ![CPU usage alarm in Azure Coosmos DB](./docs/azure_cosmos_alarms_cpuusage.png)
 
-### Example 2 - use Azure Data Explorer to perform advanced real-time analysis on the collected events
+### Example 2 - use Azure Data Explorer to perform advanced time series analysis on the collected events
 
 1. Create a Data Explorer cluster. Open [Azure Data Explorer](https://dataexplorer.azure.com) and create a new database. Run the following [Kusto](https://learn.microsoft.com/en-us/kusto/) commands to create the necessary schema.
 
