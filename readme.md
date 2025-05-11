@@ -188,7 +188,7 @@ HAVING MIN(ParameterValue) < LimitMinValue OR MAX(ParameterValue) > LimitMaxValu
 
 The Stream Analytics job should look like the screenshot below:
 
-![Azure Stream Analytics job](./docs/azure_streamanalytics.png)
+![Azure Stream Analytics job](./docs/azure_streamanalytics_job.png)
 
 4. Add `config.env` to `cmd/azureeventhubs`
 
