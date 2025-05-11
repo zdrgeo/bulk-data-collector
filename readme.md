@@ -6,17 +6,24 @@ In the telecom industry, CWMP (also known as TR-069) is a widely adopted protoco
 
 Being SOAP-based, CWMP is well-suited for remote device management, but presents challenges when collecting large volumes of telemetry data from the devices. To address this, an extension to the protocol allows devices to periodically submit bulk data reports in CSV or JSON format to a separate endpoint known as bulk data collector.
 
-This option not only provides a more efficient data format, but also decouples the telemetry data plane from the control plane used by the ACS. In other words, you are not limited to sending telemetry to the ACS itself (or to the component of the ACS solution responsible for this). Instead, you can send telemetry data to a dedicated analytics or telemetry platform — solutions that are often more scalable and capable than those provided by traditional ACS systems.
+This option not only provides a more efficient data format, but also decouples the telemetry data channel from the control chanel used by the ACS. In other words, you are not limited to sending telemetry to the ACS itself (or to the component of the ACS solution responsible for this). Instead, you can send telemetry data to a dedicated analytics or telemetry platform — solutions that are often more scalable and capable than those provided by traditional ACS systems.
 
 This repository explores several practical options for implementing this approach.
 
 - [Azure Event Hubs](#azure-event-hubs) - sends the collected device parameters to Azure Events Hubs - the main Azure real-time data ingestion service
 - [OpenTelemetry (OTel)](#opentelemetry-otel) - converts selected device parameters into OTel metrics and sends them to any OTel compatible collector or backend
-- [MQTT](#mqtt) - sends the collected device parameters to any MQTT v5 compatible broker
-- [Dapr](#dapr) - sends the collected device parameters to any suitable Dapr binding, pub/sub, state store or actor
+- [MQTT](#mqtt) - sends the parameters to any MQTT v5 compatible broker
+- [Dapr](#dapr) - sends the parameters to any suitable Dapr pub/sub, output binding, state store or actor
 
 > [!NOTE]
 > A newer protocol — USP (also known as TR-369) - aims to replace CWMP. It offers better performance, modern communication patterns, and enhanced capabilities, but it is not yet widely adopted. USP uses the same mechanism for telemetry data collection as CWMP, so the same approach can also be used with USP.
+
+> [!TIP]
+> The repository includes options to test the different collectors without a physical CPE device
+> - HTTP test files are available in the [http](http) folder
+> - Grafana k6 load tests can be found in the [grafana/k6](grafana/k6) folder
+> 
+> You can configure a physical CPE device as described in this article from QA Cafe - [Big data analytics using TR-069 or TR-369 (USP) HTTP bulk data collection](https://www.qacafe.com/resources/data-collection-analytics-with-tr069-tr369-usp/?utm_source=chatgpt.com)
 
 ## Context
 
@@ -32,7 +39,9 @@ graph LR
 
 ## Azure Event Hubs
 
-This variant of the collector sends the collected data to [Azure Events Hubs](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about) - the main Azure real-time data ingestion service. Once the data is ingested into Event Hubs, there is a large number of real-time stream processing, data analytics and data storage services that you can use to extract insights from it.
+[cmd/azureeventhubs](cmd/azureeventhubs)
+
+This variant of the collector sends the collected device parameters to [Azure Events Hubs](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-about) - the main Azure real-time data ingestion service. Once the data is ingested into Event Hubs, there is a large number of real-time stream processing, data analytics and data storage services that you can use to extract insights from it.
 
 The Azure Event Hubs collector variant is relatively more complex than the others. It is worth taking a look at its internal components so you can configure it to work efficiently.
 
@@ -359,6 +368,8 @@ dataPoints
 
 ## OpenTelemetry (OTel)
 
+[cmd/otel](cmd/otel)
+
 This variant of the collector works very differently — it uses a configurable mapping to extract selected properties from device reports and convert them into OTel metrics. These metrics are then periodically exported via the OTLP protocol to any [OpenTelemetry (OTel)](https://opentelemetry.io/docs/what-is-opentelemetry/) compatible collector. This enables direct integration of selected device metrics with a wide range of observability platforms.
 
 ### Example 1 - Transform the collected events into metrics, use the OpenTelemetry (OTel) collector to process and export the metrics to both Azure Monitor and Azure Data Explorer
@@ -536,7 +547,14 @@ OTELMetrics
 
 ## MQTT
 
-This variant of the collector sends the collected data to any MQTT v5 compatible broker.
+[cmd/mqtt](cmd/mqtt)
+
+This variant of the collector sends the collected device parameters to any MQTT v5 compatible broker.
+
+> [!NOTE]
+> Some devices can use MQTT to send the bulk data reports directly to the MQTT broker.
+
+Work in progress...
 
 ### Example 1
 
@@ -575,6 +593,10 @@ k6 run collector.js
 Work in progress...
 
 ## Dapr
+
+[cmd/dapr](cmd/dapr)
+
+This variant of the collector sends the collected device parameters to any suitable [Dapr](https://dapr.io) pub/sub.
 
 Work in progress...
 
