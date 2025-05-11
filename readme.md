@@ -10,9 +10,9 @@ This option not only provides a more efficient data format, but also decouples t
 
 This repository explores several practical options for implementing this approach.
 
-- [Azure Event Hubs](#azure-event-hubs) - sends the collected device parameters to Azure Event Hubs for near real-time processing and advanced analytics
-- [OpenTelemetry (OTel)](#opentelemetry-otel) - converts selected device parameters into OTel metrics and sends them to any OTel compatible collector or backend
-- [MQTT](#mqtt) - sends the device parameters to any MQTT v5 compatible broker like Azure Event Grid
+- [Azure Event Hubs](#azure-event-hubs) - sends the collected device parameters to Azure Event Hubs - enables near real-time processing scenarios and advanced analytics
+- [OpenTelemetry (OTel)](#opentelemetry-otel) - converts selected device parameters into OTel metrics and sends them to any OTLP compatible collector or backend
+- [MQTT](#mqtt) - sends the device parameters to Azure Event Grid or any other MQTT v5 compatible broker - enables scenarios for building digital twins or automatic device registries
 - [Dapr](#dapr) - sends the device parameters to any suitable Dapr pub/sub, output binding, state store or actor
 
 > [!NOTE]
