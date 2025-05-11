@@ -23,7 +23,7 @@ This repository explores several practical options for implementing this approac
 > - HTTP test files are available in the [http](http) folder
 > - Grafana k6 load tests can be found in the [grafana/k6](grafana/k6) folder
 > 
-> You can configure a physical CPE device as described in this article from QA Cafe - [Big data analytics using TR-069 or TR-369 (USP) HTTP bulk data collection](https://www.qacafe.com/resources/data-collection-analytics-with-tr069-tr369-usp/?utm_source=chatgpt.com)
+> You can configure a physical CPE device to send bulk data reports as described in this article from QA Cafe - [Big data analytics using TR-069 or TR-369 (USP) HTTP bulk data collection](https://www.qacafe.com/resources/data-collection-analytics-with-tr069-tr369-usp/?utm_source=chatgpt.com)
 
 ## Context
 
