@@ -1,11 +1,11 @@
 Run Prometheus and Grafana
 
-Open [Prometheus dashboard](http://localhost:9090) or [Grafana dashboard](http://localhost:3000).
-
 ```
 docker compose --profile grafana up -d
 docker compose down
 ```
+
+Open the Prometheus [dashboard](http://localhost:9090) or Grafana [dashboard](http://localhost:3000).
 
 Create a graph with the following metrics to monitor the number of events processed per partition
 
