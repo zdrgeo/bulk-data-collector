@@ -24,6 +24,8 @@ type OTelCollectorService struct {
 	options     *OTelCollectorServiceOptions
 }
 
+var _ services.CollectorService = (*OTelCollectorService)(nil)
+
 func NewOTelCollectorService(options *OTelCollectorServiceOptions) (*OTelCollectorService, error) {
 	meter := otel.Meter(options.Meter.Name)
 

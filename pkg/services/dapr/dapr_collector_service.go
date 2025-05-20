@@ -27,6 +27,8 @@ type DaprCollectorService struct {
 	options    *DaprCollectorServiceOptions
 }
 
+var _ services.CollectorService = (*DaprCollectorService)(nil)
+
 func NewDaprCollectorService(daprClient daprclient.Client, option *DaprCollectorServiceOptions) *DaprCollectorService {
 	return &DaprCollectorService{daprClient: daprClient, options: option}
 }

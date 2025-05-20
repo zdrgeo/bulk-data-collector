@@ -28,6 +28,8 @@ type MQTTCollectorService struct {
 	options           *MQTTCollectorServiceOptions
 }
 
+var _ services.CollectorService = (*MQTTCollectorService)(nil)
+
 func NewMQTTCollectorService(connectionManager *autopaho.ConnectionManager, options *MQTTCollectorServiceOptions) *MQTTCollectorService {
 	return &MQTTCollectorService{connectionManager: connectionManager, options: options}
 }

@@ -54,6 +54,8 @@ type AzureEventHubsCollectorService struct {
 	eventCounter    metric.Int64Counter
 }
 
+var _ services.CollectorService = (*AzureEventHubsCollectorService)(nil)
+
 func NewAzureEventHubsCollectorService(producerClient *azeventhubs.ProducerClient, options *AzureEventHubsCollectorServiceOptions) (*AzureEventHubsCollectorService, error) {
 	meter := otel.Meter(meterName)
 

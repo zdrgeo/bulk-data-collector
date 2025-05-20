@@ -6,6 +6,8 @@ import (
 
 type MockCollectorService struct{}
 
+var _ CollectorService = (*MockCollectorService)(nil)
+
 func NewMockCollectorService() *MockCollectorService {
 	return &MockCollectorService{}
 }
