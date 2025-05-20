@@ -11,10 +11,11 @@ import (
 )
 
 type DaprEventModel struct {
-	OUI          string         `json:"OUI"`
-	ProductClass string         `json:"ProductClass"`
-	SerialNumber string         `json:"SerialNumber"`
-	Parameters   map[string]any `json:"Parameters"`
+	CollectionTime time.Time
+	OUI            string         `json:"OUI"`
+	ProductClass   string         `json:"ProductClass"`
+	SerialNumber   string         `json:"SerialNumber"`
+	Parameters     map[string]any `json:"Parameters"`
 }
 
 type DaprCollectorServiceOptions struct {
@@ -40,12 +41,13 @@ func (s *DaprCollectorService) CollectCSV(ctx context.Context, oui, productClass
 		reports[parameterPerRow.ReportTimestamp] = append(reports[parameterPerRow.ReportTimestamp], parameterPerRow)
 	}
 
-	for _, report := range reports {
+	for reportTimestamp, report := range reports {
 		event := &DaprEventModel{
-			OUI:          oui,
-			ProductClass: productClass,
-			SerialNumber: serialNumber,
-			Parameters:   make(map[string]any, len(report)),
+			CollectionTime: reportTimestamp,
+			OUI:            oui,
+			ProductClass:   productClass,
+			SerialNumber:   serialNumber,
+			Parameters:     make(map[string]any, len(report)),
 		}
 
 		for _, parameterPerRow := range report {
@@ -73,10 +75,11 @@ func (s *DaprCollectorService) CollectJSON(ctx context.Context, oui, productClas
 	if bulkData.NameValuePair != nil {
 		for _, report := range bulkData.NameValuePair.Report {
 			event := &DaprEventModel{
-				OUI:          oui,
-				ProductClass: productClass,
-				SerialNumber: serialNumber,
-				Parameters:   make(map[string]any, len(report)),
+				CollectionTime: report["CollectionTime"].(time.Time),
+				OUI:            oui,
+				ProductClass:   productClass,
+				SerialNumber:   serialNumber,
+				Parameters:     make(map[string]any, len(report)),
 			}
 
 			for key, value := range report {

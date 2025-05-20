@@ -25,10 +25,11 @@ const (
 )
 
 type AzureEventHubsEventModel struct {
-	OUI          string         `json:"OUI"`
-	ProductClass string         `json:"ProductClass"`
-	SerialNumber string         `json:"SerialNumber"`
-	Parameters   map[string]any `json:"Parameters"`
+	CollectionTime time.Time
+	OUI            string         `json:"OUI"`
+	ProductClass   string         `json:"ProductClass"`
+	SerialNumber   string         `json:"SerialNumber"`
+	Parameters     map[string]any `json:"Parameters"`
 }
 
 type AzureEventHubsEventBatchModel struct {
@@ -109,12 +110,13 @@ func (s *AzureEventHubsCollectorService) CollectCSV(ctx context.Context, oui, pr
 		reports[parameterPerRow.ReportTimestamp] = append(reports[parameterPerRow.ReportTimestamp], parameterPerRow)
 	}
 
-	for _, report := range reports {
+	for reportTimestamp, report := range reports {
 		event := &AzureEventHubsEventModel{
-			OUI:          oui,
-			ProductClass: productClass,
-			SerialNumber: serialNumber,
-			Parameters:   make(map[string]any, len(report)),
+			CollectionTime: reportTimestamp,
+			OUI:            oui,
+			ProductClass:   productClass,
+			SerialNumber:   serialNumber,
+			Parameters:     make(map[string]any, len(report)),
 		}
 
 		for _, parameterPerRow := range report {
@@ -139,10 +141,11 @@ func (s *AzureEventHubsCollectorService) CollectJSON(ctx context.Context, oui, p
 	if bulkData.NameValuePair != nil {
 		for _, report := range bulkData.NameValuePair.Report {
 			event := &AzureEventHubsEventModel{
-				OUI:          oui,
-				ProductClass: productClass,
-				SerialNumber: serialNumber,
-				Parameters:   make(map[string]any, len(report)),
+				CollectionTime: report["CollectionTime"].(time.Time),
+				OUI:            oui,
+				ProductClass:   productClass,
+				SerialNumber:   serialNumber,
+				Parameters:     make(map[string]any, len(report)),
 			}
 
 			for key, value := range report {
