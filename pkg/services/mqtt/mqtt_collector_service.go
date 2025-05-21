@@ -13,7 +13,7 @@ import (
 )
 
 type MQTTEventModel struct {
-	CollectionTime time.Time
+	CollectionTime time.Time      `json:"CollectionTime"`
 	OUI            string         `json:"OUI"`
 	ProductClass   string         `json:"ProductClass"`
 	SerialNumber   string         `json:"SerialNumber"`
