@@ -85,7 +85,7 @@ func main() {
 
 func mainMQTT() {
 	mqttCollectorServiceOptions := &mqttservices.MQTTCollectorServiceOptions{
-		TopicName: viper.GetString("TOPIC_NAME"),
+		CollectorName: viper.GetString("COLLECTOR_NAME"),
 	}
 
 	collectorService := mqttservices.NewMQTTCollectorService(connectionManager, mqttCollectorServiceOptions)

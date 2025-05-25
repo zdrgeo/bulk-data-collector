@@ -21,7 +21,7 @@ type MQTTEventModel struct {
 }
 
 type MQTTCollectorServiceOptions struct {
-	TopicName string
+	CollectorName string
 }
 
 type MQTTCollectorService struct {
@@ -50,8 +50,7 @@ func (s *MQTTCollectorService) Collect(ctx context.Context, oui, productClass, s
 		}
 
 		deviceName := fmt.Sprintf("%s-%s-%s", oui, productClass, serialNumber)
-		collectorName := "100000"
-		topic := fmt.Sprintf("collector/%s/device/%s/event", collectorName, deviceName)
+		topic := fmt.Sprintf("collector/%s/device/%s/event", s.options.CollectorName, deviceName)
 
 		payload, err := json.MarshalIndent(event, "", "  ")
 
@@ -102,8 +101,7 @@ func (s *MQTTCollectorService) CollectCSV(ctx context.Context, oui, productClass
 		}
 
 		deviceName := fmt.Sprintf("%s-%s-%s", oui, productClass, serialNumber)
-		collectorName := "100000"
-		topic := fmt.Sprintf("collector/%s/device/%s/event", collectorName, deviceName)
+		topic := fmt.Sprintf("collector/%s/device/%s/event", s.options.CollectorName, deviceName)
 
 		payload, err := json.MarshalIndent(event, "", "  ")
 
@@ -143,8 +141,7 @@ func (s *MQTTCollectorService) CollectJSON(ctx context.Context, oui, productClas
 			}
 
 			deviceName := fmt.Sprintf("%s-%s-%s", oui, productClass, serialNumber)
-			collectorName := "100000"
-			topic := fmt.Sprintf("collector/%s/device/%s/event", collectorName, deviceName)
+			topic := fmt.Sprintf("collector/%s/device/%s/event", s.options.CollectorName, deviceName)
 
 			payload, err := json.MarshalIndent(event, "", "  ")
 

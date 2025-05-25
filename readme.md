@@ -573,7 +573,7 @@ MQTT_KEY_FILE=<Add the key file here>
 MQTT_CLIENT_ID=<Add the MQTT client ID here>
 MQTT_CONNECT_USERNAME=<Add the MQTT connect username here>
 MQTT_CONNECT_PASSWORD=<Add the MQTT connect password here>
-TOPIC_NAME=<Add the topic name here>
+COLLECTOR_NAME=<Add the topic name here>
 ```
 
 3. Run the bulk data collector
