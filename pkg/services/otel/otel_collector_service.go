@@ -44,6 +44,24 @@ func NewOTelCollectorService(options *OTelCollectorServiceOptions) (*OTelCollect
 	return &OTelCollectorService{instruments: instruments, options: options}, nil
 }
 
+func (s *OTelCollectorService) Collect(ctx context.Context, oui, productClass, serialNumber string, data *services.DataModel) error {
+	attributes := attribute.NewSet(attribute.String("OUI", oui), attribute.String("ProductClass", productClass), attribute.String("SerialNumber", serialNumber))
+
+	for _, report := range data.Reports {
+		for key, value := range report.Parameters {
+			instrument, ok := s.instruments[key]
+
+			if ok {
+				if err := instrument.Measure(ctx, value, attributes); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *OTelCollectorService) CollectCSV(ctx context.Context, oui, productClass, serialNumber string, bulkData *services.CSVBulkDataModel) error {
 	reports := map[time.Time][]*services.ParameterPerRowModel{}
 

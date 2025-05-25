@@ -103,6 +103,28 @@ func NewAzureEventHubsCollectorService(producerClient *azeventhubs.ProducerClien
 	return &AzureEventHubsCollectorService{producerClient: producerClient, options: options, partitionQueues: partitionQueues, queueCounter: queueCounter, batchCounter: batchCounter, eventCounter: eventCounter}, nil
 }
 
+func (s *AzureEventHubsCollectorService) Collect(ctx context.Context, oui, productClass, serialNumber string, data *services.DataModel) error {
+	for _, report := range data.Reports {
+		event := &AzureEventHubsEventModel{
+			CollectionTime: report.CollectionTime,
+			OUI:            oui,
+			ProductClass:   productClass,
+			SerialNumber:   serialNumber,
+			Parameters:     make(map[string]any, len(report.Parameters)),
+		}
+
+		for key, value := range report.Parameters {
+			event.Parameters[key] = value
+		}
+
+		if err := s.enqueue(ctx, event); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *AzureEventHubsCollectorService) CollectCSV(ctx context.Context, oui, productClass, serialNumber string, bulkData *services.CSVBulkDataModel) error {
 	reports := map[time.Time][]*services.ParameterPerRowModel{}
 

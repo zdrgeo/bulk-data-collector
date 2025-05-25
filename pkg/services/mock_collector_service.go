@@ -12,6 +12,10 @@ func NewMockCollectorService() *MockCollectorService {
 	return &MockCollectorService{}
 }
 
+func (s *MockCollectorService) Collect(ctx context.Context, oui, productClass, serialNumber string, data *DataModel) error {
+	return nil
+}
+
 func (s *MockCollectorService) CollectCSV(ctx context.Context, oui, productClass, serialNumber string, bulkData *CSVBulkDataModel) error {
 	return nil
 }

@@ -34,6 +34,31 @@ func NewDaprCollectorService(daprClient daprclient.Client, option *DaprCollector
 	return &DaprCollectorService{daprClient: daprClient, options: option}
 }
 
+func (s *DaprCollectorService) Collect(ctx context.Context, oui, productClass, serialNumber string, data *services.DataModel) error {
+	for _, report := range data.Reports {
+		event := &DaprEventModel{
+			CollectionTime: report.CollectionTime,
+			OUI:            oui,
+			ProductClass:   productClass,
+			SerialNumber:   serialNumber,
+			Parameters:     make(map[string]any, len(report.Parameters)),
+		}
+
+		for key, value := range report.Parameters {
+			event.Parameters[key] = value
+		}
+
+		deviceName := fmt.Sprintf("%s-%s-%s", oui, productClass, serialNumber)
+		topicName := fmt.Sprintf("%s/device/%s/event", s.options.TopicName, deviceName)
+
+		if err := s.daprClient.PublishEvent(ctx, s.options.PubSubName, topicName, event); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *DaprCollectorService) CollectCSV(ctx context.Context, oui, productClass, serialNumber string, bulkData *services.CSVBulkDataModel) error {
 	reports := map[time.Time][]*services.ParameterPerRowModel{}
 
