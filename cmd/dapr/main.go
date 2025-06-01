@@ -15,8 +15,6 @@ const (
 	storeName  = "iotoperations-statestore"
 	pubSubName = "iotoperations-pubsub"
 	topicName  = "collector"
-	clientID   = "100000-1"
-	username   = "100000"
 )
 
 var (
