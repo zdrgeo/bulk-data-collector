@@ -68,7 +68,7 @@ func mainDapr() {
 
 	http.Handle("/collector", http.HandlerFunc(collectorHandler.Collect))
 
-	if err := http.ListenAndServe(":8088", nil); err != nil {
+	if err := http.ListenAndServe(":8088", nil); err != nil && err != http.ErrServerClosed {
 		log.Panic(err)
 	}
 }

@@ -105,7 +105,7 @@ func initOTel() {
 	prometheusExporter, err := prometheus.New()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	_ = prometheusExporter
@@ -143,7 +143,7 @@ func mainOTel() {
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/collector", http.HandlerFunc(collectorHandler.Collect))
 
-	if err := http.ListenAndServe(":8088", nil); err != nil {
+	if err := http.ListenAndServe(":8088", nil); err != nil && err != http.ErrServerClosed {
 		log.Panic(err)
 	}
 }
