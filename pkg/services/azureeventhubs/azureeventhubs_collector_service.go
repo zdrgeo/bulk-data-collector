@@ -100,7 +100,7 @@ func NewAzureEventHubsCollectorService(producerClient *azeventhubs.ProducerClien
 		partitionQueues = append(partitionQueues, partitionQueue)
 	}
 
-	return &AzureEventHubsCollectorService{producerClient: producerClient, options: options, partitionQueues: partitionQueues, queueCounter: queueCounter, batchCounter: batchCounter, eventCounter: eventCounter}, nil
+	return &AzureEventHubsCollectorService{producerClient, options, partitionQueues, queueCounter, batchCounter, eventCounter}, nil
 }
 
 func (s *AzureEventHubsCollectorService) Collect(ctx context.Context, oui, productClass, serialNumber string, data *services.DataModel) error {

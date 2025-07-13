@@ -32,7 +32,7 @@ type MQTTCollectorService struct {
 var _ services.CollectorService = (*MQTTCollectorService)(nil)
 
 func NewMQTTCollectorService(connectionManager *autopaho.ConnectionManager, options *MQTTCollectorServiceOptions) *MQTTCollectorService {
-	return &MQTTCollectorService{connectionManager: connectionManager, options: options}
+	return &MQTTCollectorService{connectionManager, options}
 }
 
 func (s *MQTTCollectorService) Collect(ctx context.Context, oui, productClass, serialNumber string, data *services.DataModel) error {

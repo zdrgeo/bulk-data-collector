@@ -30,8 +30,8 @@ type DaprCollectorService struct {
 
 var _ services.CollectorService = (*DaprCollectorService)(nil)
 
-func NewDaprCollectorService(daprClient daprclient.Client, option *DaprCollectorServiceOptions) *DaprCollectorService {
-	return &DaprCollectorService{daprClient: daprClient, options: option}
+func NewDaprCollectorService(daprClient daprclient.Client, options *DaprCollectorServiceOptions) *DaprCollectorService {
+	return &DaprCollectorService{daprClient, options}
 }
 
 func (s *DaprCollectorService) Collect(ctx context.Context, oui, productClass, serialNumber string, data *services.DataModel) error {

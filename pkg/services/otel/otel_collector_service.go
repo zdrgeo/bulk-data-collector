@@ -41,7 +41,7 @@ func NewOTelCollectorService(options *OTelCollectorServiceOptions) (*OTelCollect
 		instruments[instrumentOptions.ParameterName] = instrument
 	}
 
-	return &OTelCollectorService{instruments: instruments, options: options}, nil
+	return &OTelCollectorService{instruments, options}, nil
 }
 
 func (s *OTelCollectorService) Collect(ctx context.Context, oui, productClass, serialNumber string, data *services.DataModel) error {
