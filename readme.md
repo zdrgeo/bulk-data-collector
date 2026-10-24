@@ -1,5 +1,8 @@
 # CWMP and USP bulk data collector
 
+> [!CAUTION]
+> This repository has been moved to [CWMP Bulk Data Collector](https://github.com/zdrgeo/cwmp-bulk-data-collector)
+
 ## Overview
 
 In the telecom industry, CWMP (also known as TR-069) is a widely adopted protocol and a preferred solution for ISPs to remotely manage anywhere from tens of thousands to millions of customer premises devices. The protocol defines two main roles: the CPE (Customer Premises Equipment) devices and the ACS (Auto-Configuration Server), which controls them.
